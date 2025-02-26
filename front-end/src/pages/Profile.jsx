@@ -70,6 +70,39 @@ const Profile = () => {
     fetchData();
   }, [playerId]);
 
+  useEffect (() => {
+    const fetchTeammates = async () => {
+      try {
+        const response = await fetch("/players");
+        const data = await response.json();
+        const playerTeamId = profile.player_info[0]?.TEAM_ID;
+
+        if (playerTeamId && data[playerTeamId]) {
+          setTeammates(data[playerTeamId].players);
+        }
+      } catch (error) {
+        console.error("Error fetching teammates:", error);
+      }
+    };
+
+    fetchTeammates();
+  }, [profile]);
+
+  useEffect(() => {
+    const fetchTeammateGamelogs = async () => {
+      if (!selectedTeammate) return;
+      try {
+        const response = await fetch(`/${sport}/player/${selectedTeammate}`);
+        const data = await response.json();
+        setTeammateGamelogs(data.gamelogs);
+      } catch (error) {
+        console.error("Error fetching teammate gamelogs:", error);
+      }
+    };
+
+    fetchTeammateGamelogs();
+  }, [selectedTeammate]);
+
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload?.length) {
       const game = payload[0]?.payload;
@@ -144,7 +177,18 @@ const Profile = () => {
           <ResponsiveContainer width="100%" height={500}>
           <BarChart
             data={profile.gamelogs
-              .filter((game) => (!opponent || game.opp === opponent) && (!minutes || game.mins_played >= minutes) && (!winLoss || game.outcome === winLoss))
+              .filter((game) => {
+                const isOpponentMatch = !opponent || game.opp === opponent;
+                const isMinutesMatch = !minutes || game.mins_played >= minutes;
+                const isWinLossMatch = !winLoss || game.outcome === winLoss;
+                const isTeammateMatch = filterTeammate
+                  ? filterTeammate === 'with'
+                    ? teammateGamelogs.some(teammateGame => teammateGame.game_id === game.game_id)
+                    : !teammateGamelogs.some(teammateGame => teammateGame.game_id === game.game_id)
+                  : true;
+        
+                return isOpponentMatch && isMinutesMatch && isWinLossMatch && isTeammateMatch;
+              })
               .slice(-xGames)
             }
             margin={{ top: 20, right: 50, left: 0, bottom: 5 }}
@@ -153,7 +197,19 @@ const Profile = () => {
               <YAxis />
               <Tooltip content={<CustomTooltip active={false} payload={[]} label={""} opponent={opponent} />} />
               <Bar dataKey={selectedStat} radius={20}>
-                {profile.gamelogs.filter((game) => (!opponent || game.opp === opponent) && (!minutes || game.mins_played >= minutes) && (!winLoss || game.outcome === winLoss)).slice(-xGames).map((entry, index) => (
+                {profile.gamelogs.filter((game) => {
+                  const isOpponentMatch = !opponent || game.opp === opponent;
+                  const isMinutesMatch = !minutes || game.mins_played >= minutes;
+                  const isWinLossMatch = !winLoss || game.outcome === winLoss;
+                  const isTeammateMatch = filterTeammate
+                    ? filterTeammate === 'with'
+                      ? teammateGamelogs.some(teammateGame => teammateGame.game_id === game.game_id)
+                      : !teammateGamelogs.some(teammateGame => teammateGame.game_id === game.game_id)
+                    : true;
+          
+                  return isOpponentMatch && isMinutesMatch && isWinLossMatch && isTeammateMatch;
+                })
+                .slice(-xGames).map((entry, index) => (
                   <Cell
                     key={index}
                     fill={
@@ -186,7 +242,7 @@ const Profile = () => {
         </div>
 
         {/* Filter Controls */}
-        <div className="grid md:grid-cols-5 gap-3">
+        <div className="grid md:grid-cols-6 gap-3">
           <input
             className="rounded-2xl bg-[#007ea7] text-white p-1 text-center mx-3 my-1"
             type="number"
@@ -272,6 +328,34 @@ const Profile = () => {
             <option value="W">Wins Only</option>
             <option value="L">Losses Only</option>
           </select>
+          <select
+            className="rounded-2xl bg-[#007ea7] text-white p-1 mx-3 my-1 text-center"
+            id="selectedTeammate"
+            onChange={(e) => setSelectedTeammate(e.target.value || null)}
+            value={selectedTeammate || ""}
+          >
+            <option value="">Select a teammate</option>
+            {teammates.map((teammate) => (
+              <option key={teammate.player_id} value={teammate.player_id}>
+                {teammate.player_name}
+              </option>
+            ))}
+          </select>
+
+          {selectedTeammate && (
+            <>
+              <select
+                className="rounded-2xl bg-[#007ea7] text-white p-1 mx-3 my-1 text-center"
+                id="filterTeammate"
+                onChange={(e) => setFilterTeammate(e.target.value || null)}
+                value={filterTeammate || ""}
+              >
+                <option value="">All games</option>
+                <option value="with">With selected teammate</option>
+                <option value="without">Without selected teammate</option>
+              </select>
+            </>
+          )}
         </div>
 
         {/* Game Log Section */}
