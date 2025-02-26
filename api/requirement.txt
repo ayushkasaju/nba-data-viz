@@ -1,0 +1,10 @@
+Flask
+pandas
+time
+apscheduler
+nba_api
+requests
+random
+sqlalchemy
+mysql-connnector-python
+gunicorn

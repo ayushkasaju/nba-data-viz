@@ -1,13 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
-import matplotlib.pyplot as plt
-import plotly.express as px
-import plotly.graph_objects as go
 import time
 from apscheduler.schedulers.background import BackgroundScheduler
-import undetected_chromedriver as uc
-from datetime import datetime, timezone
-from dateutil import parser
 
 from nba_api.stats.endpoints import playergamelog
 from nba_api.stats.endpoints import playerindex
@@ -19,13 +13,6 @@ from nba_api.stats.endpoints import leaguedashplayerstats
 import requests
 from requests.exceptions import Timeout
 import random
-
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as ec
 
 import sqlalchemy
 
