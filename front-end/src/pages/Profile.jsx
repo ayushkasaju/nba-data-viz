@@ -11,12 +11,19 @@ import {
   Cell,
   Line,
   ReferenceLine,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  LabelList
 } from "recharts";
 
 const Profile = () => {
   const [profile, setProfile] = useState({
     player_info: [],
-    gamelogs: []
+    gamelogs: [],
+    player_grades: [],
   });
 
   const [selectedStat, setSelectedStat] = useState("pts");
@@ -60,7 +67,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`/${sport}/player/${playerId}`);
+        const response = await fetch(`/nba/player/${playerId}`);
         const data = await response.json();
         setProfile(data);
       } catch (error) {
@@ -128,6 +135,14 @@ const Profile = () => {
     return null;
   };
 
+  const radarData = [
+    { stat: "Scoring", value: (profile.player_grades[0]?.Scoring || 0).toFixed(1) },
+    { stat: "Playmaking", value: (profile.player_grades[0]?.Playmaking || 0).toFixed(1) },
+    { stat: "Rebounding", value: (profile.player_grades[0]?.Rebounding || 0).toFixed(1) },
+    { stat: "Defense", value: (profile.player_grades[0]?.Defense || 0).toFixed(1) },
+    { stat: "Athleticism", value: (profile.player_grades[0]?.Athleticism || 0).toFixed(1) },
+  ];
+
   const playerName =
     profile.player_info.length > 0
       ? profile.player_info[0].PLAYER_FULL_NAME
@@ -147,31 +162,68 @@ const Profile = () => {
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Bio Section */}
         <div className="text-white p-6 rounded-2xl flex flex-col">
-          {/* Player Image (if available) */}
-          {profile.player_info.length > 0 && profile.player_info[0].PLAYER_IMAGE && (
+          {profile.player_info[0]?.PLAYER_IMAGE && (
             <img
               src={profile.player_info[0].PLAYER_IMAGE}
               alt={profile.player_info[0].PLAYER_FULL_NAME}
               className="w-32 h-32 rounded-full mb-4 border-4 border-blue-500"
             />
           )}
-
-          {/* Player Name */}
-          <h1 className="text-4xl font-extrabold">{profile.player_info.length > 0 ? profile.player_info[0].PLAYER_FULL_NAME : "Player Name"}</h1>
-
-          {/* Player Details */}
-          <div className="mt-2 text-lg space-y-1">
-            <p><span className="font-semibold">Team:</span> {profile.player_info.length > 0 ? profile.player_info[0].TEAM_FULL_NAME : "N/A"}</p>
-            <p><span className="font-semibold">Position:</span> {profile.player_info.length > 0 ? profile.player_info[0].POSITION : "N/A"}</p>
-            <p><span className="font-semibold">Height:</span> {profile.player_info.length > 0 ? profile.player_info[0].HEIGHT : "N/A"}</p>
-            <p><span className="font-semibold">Weight:</span> {profile.player_info.length > 0 ? profile.player_info[0].WEIGHT : "N/A"}</p>
-            <p><span className="font-semibold">College:</span> {profile.player_info.length > 0 ? profile.player_info[0].COLLEGE : "N/A"}</p>
-            <p><span className="font-semibold">Draft:</span> {profile.player_info.length > 0 ? (profile.player_info[0].DRAFT_YEAR === 0 ? "Undrafted" : `${profile.player_info[0].DRAFT_YEAR} Round ${profile.player_info[0].DRAFT_ROUND} Pick ${profile.player_info[0].DRAFT_NUMBER}`) : "N/A"}</p>
-          </div>
+          <h1 className="text-4xl font-extrabold">{playerName}</h1>
+          <p><span className="font-semibold">Team:</span> {profile.player_info[0]?.TEAM_FULL_NAME || "N/A"}</p>
+          <p><span className="font-semibold">Position:</span> {profile.player_info[0]?.POSITION || "N/A"}</p>
+          <p><span className="font-semibold">Height:</span> {profile.player_info[0]?.HEIGHT || "N/A"}</p>
+          <p><span className="font-semibold">Weight:</span> {profile.player_info[0]?.WEIGHT || "N/A"}</p>
         </div>
 
+        {/* Radar Chart Section */}
+        {profile.player_grades[0] ? (
+          <div className="flex justify-center items-center">
+            <ResponsiveContainer width="100%" height={400}>
+              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                <PolarGrid />
+                <PolarAngleAxis dataKey="stat" tick={{ fill: "white" }} />
+                <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false}/>
+                <Radar name={playerName} dataKey="value" stroke="#007ea7" strokeWidth={2} fill="#007ea7" fillOpacity={0.4}>
+                  <LabelList
+                    dataKey="value"
+                    position="outside"
+                    content={({ x, y, value }) => {
+                      const color = value <= 45 ? "#ff4242" : value >= 65 && value < 80 ? "#35e16f" : value >= 80 ? "#4D66FF" : "#ffc822";
+                      const padding = 3;
+
+                      return (
+                        <>
+                          {/* Background rectangle */}
+                          <rect
+                            x={x - 18 - padding} // Position the rect with some padding around the text
+                            y={y - 9 - padding}
+                            width={36 + padding * 2}  // Width based on the text length
+                            height={18 + padding * 2} // Height based on the text size
+                            fill={color}
+                            rx={5}
+                          />
+                          
+                          {/* Text inside the rectangle */}
+                          <text x={x} y={y} fill="white" fontSize={16} textAnchor="middle" alignmentBaseline="middle">
+                            {value}
+                          </text>
+                        </>
+                      );
+                    }}
+                    fontSize={16}
+                    angle={0}
+                  />
+                </Radar>
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : ( <></> )}
+      </div>
+                
         {/* Chart Section */}
         <div className="w-full">
           <ResponsiveContainer width="100%" height={500}>
@@ -191,7 +243,7 @@ const Profile = () => {
               })
               .slice(-xGames)
             }
-            margin={{ top: 20, right: 50, left: 0, bottom: 5 }}
+            margin={{ top: 0, right: 50, left: 0, bottom: 5 }}
           >
               <XAxis dataKey="date" />
               <YAxis />
@@ -213,7 +265,7 @@ const Profile = () => {
                   <Cell
                     key={index}
                     fill={
-                      entry[selectedStat] < thresholdValue ? "#FF4747" : entry[selectedStat] === thresholdValue ? "#8C8C89" : "#00DF4C"
+                      entry[selectedStat] < thresholdValue ? "#FF4747" : entry[selectedStat] > thresholdValue ? "#00DF4C" : "#8C8C89"
                     }
                   />
                 ))}
@@ -331,7 +383,7 @@ const Profile = () => {
           <select
             className="rounded-2xl bg-[#007ea7] text-white p-1 mx-3 my-1 text-center"
             id="selectedTeammate"
-            onChange={(e) => setSelectedTeammate(e.target.value || null)}
+            onChange={(e) => setSelectedTeammate(e.target.value)}
             value={selectedTeammate || ""}
           >
             <option value="">Select a teammate</option>
@@ -347,7 +399,7 @@ const Profile = () => {
               <select
                 className="rounded-2xl bg-[#007ea7] text-white p-1 mx-3 my-1 text-center"
                 id="filterTeammate"
-                onChange={(e) => setFilterTeammate(e.target.value || null)}
+                onChange={(e) => setFilterTeammate(e.target.value)}
                 value={filterTeammate || ""}
               >
                 <option value="">All games</option>
@@ -422,7 +474,6 @@ const Profile = () => {
             </button>
           </div>
         </div>
-      </div>
     </>
   );
 };

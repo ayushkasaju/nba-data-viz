@@ -9,12 +9,20 @@ from nba_api.stats.endpoints import teamdetails
 from nba_api.stats.endpoints import leaguestandingsv3
 from nba_api.live.nba.endpoints import scoreboard
 from nba_api.stats.endpoints import leaguedashplayerstats
+from nba_api.stats.endpoints import leaguedashptstats
+from nba_api.stats.endpoints import leaguehustlestatsplayer
+from nba_api.stats.endpoints import leagueplayerondetails
+from nba_api.stats.endpoints import playerdashboardbyshootingsplits
+
+from sklearn.preprocessing import MinMaxScaler
 
 import requests
 from requests.exceptions import Timeout
 import random
 
 import sqlalchemy
+import os
+from dotenv import load_dotenv
 
 
 app = Flask(__name__)
@@ -236,6 +244,207 @@ def fetchStandings():
     final_df.to_sql(name=table, con=db, if_exists='replace', index=False)
     print("standings updated")
 
+def fetchGrades():
+    db = sqlalchemy.create_engine("mysql+mysqlconnector://root:password@localhost/nba2024")
+    table = "grades"
+
+
+    player_base = leaguedashplayerstats.LeagueDashPlayerStats(measure_type_detailed_defense='Base', per_mode_detailed='PerGame')
+    player_base_df = player_base.get_data_frames()[0]
+    player_base_df = player_base_df.drop(columns=['AGE', 'W', 'L', 'W_PCT', 'FGM', 'FG_PCT', 'FG3A', 'FG3M', 'FG3_PCT', 'FTM', 'FT_PCT', 'BLKA', 'PFD', "PLUS_MINUS", "NBA_FANTASY_PTS", "DD2", "TD3", "WNBA_FANTASY_PTS", "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK", "FGM_RANK", "FGA_RANK", "FG_PCT_RANK", "FG3M_RANK", "FG3A_RANK", "FG3_PCT_RANK", "FTM_RANK", "FTA_RANK", "FT_PCT_RANK", "OREB_RANK", "DREB_RANK", "REB_RANK", "AST_RANK", "TOV_RANK", "STL_RANK", "BLK_RANK", "BLKA_RANK", "PF_RANK", "PFD_RANK", "PTS_RANK", "PLUS_MINUS_RANK", "NBA_FANTASY_PTS_RANK", "DD2_RANK", "TD3_RANK", "WNBA_FANTASY_PTS_RANK"],axis=1)
+
+    player_adv = leaguedashplayerstats.LeagueDashPlayerStats(measure_type_detailed_defense='Advanced', per_mode_detailed='PerGame')
+    player_adv_df = player_adv.get_data_frames()[0]
+    player_adv_df = player_adv_df.drop(columns=[
+        "AGE", "W", "L", "W_PCT", "E_OFF_RATING", "OFF_RATING", "sp_work_OFF_RATING",
+        "E_DEF_RATING", "DEF_RATING", "sp_work_DEF_RATING", "E_NET_RATING", "NET_RATING", "sp_work_NET_RATING",
+        "AST_PCT", "AST_TO", "AST_RATIO", "OREB_PCT", "DREB_PCT", "REB_PCT", "TM_TOV_PCT", "E_TOV_PCT",
+        "E_USG_PCT", "E_PACE", "PACE", "PACE_PER40", "sp_work_PACE", "PIE", "POSS", "FGM", "FGA",
+        "FGM_PG", "FGA_PG", "FG_PCT", "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK",
+        "E_OFF_RATING_RANK", "OFF_RATING_RANK", "sp_work_OFF_RATING_RANK", "E_DEF_RATING_RANK",
+        "DEF_RATING_RANK", "sp_work_DEF_RATING_RANK", "E_NET_RATING_RANK", "NET_RATING_RANK",
+        "sp_work_NET_RATING_RANK", "AST_PCT_RANK", "AST_TO_RANK", "AST_RATIO_RANK",
+        "OREB_PCT_RANK", "DREB_PCT_RANK", "REB_PCT_RANK", "TM_TOV_PCT_RANK", "E_TOV_PCT_RANK",
+        "EFG_PCT_RANK", "TS_PCT_RANK", "USG_PCT_RANK", "E_USG_PCT_RANK", "E_PACE_RANK",
+        "PACE_RANK", "sp_work_PACE_RANK", "PIE_RANK", "FGM_RANK", "FGA_RANK",
+        "FGM_PG_RANK", "FGA_PG_RANK", "FG_PCT_RANK",'PLAYER_NAME', 
+        'NICKNAME', 
+        'TEAM_ID', 
+        'TEAM_ABBREVIATION', 
+        'GP', 
+        'MIN'])
+    
+    player_misc = leaguedashplayerstats.LeagueDashPlayerStats(measure_type_detailed_defense='Misc', per_mode_detailed='PerGame')
+    player_misc_df = player_misc.get_data_frames()[0]
+    player_misc_df = player_misc_df.drop(columns=["AGE", "W", "L", "W_PCT", "PTS_OFF_TOV", "PTS_2ND_CHANCE", "PTS_PAINT",
+        "OPP_PTS_OFF_TOV", "OPP_PTS_2ND_CHANCE", "OPP_PTS_FB", "OPP_PTS_PAINT",
+        "BLK", "BLKA", "PF", "PFD", "NBA_FANTASY_PTS",
+        "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK",
+        "PTS_OFF_TOV_RANK", "PTS_2ND_CHANCE_RANK", "PTS_FB_RANK", "PTS_PAINT_RANK",
+        "OPP_PTS_OFF_TOV_RANK", "OPP_PTS_2ND_CHANCE_RANK", "OPP_PTS_FB_RANK", "OPP_PTS_PAINT_RANK",
+        "BLK_RANK", "BLKA_RANK", "PF_RANK", "PFD_RANK", "NBA_FANTASY_PTS_RANK",'PLAYER_NAME', 
+        'NICKNAME', 
+        'TEAM_ID', 
+        'TEAM_ABBREVIATION', 
+        'GP', 
+        'MIN'])
+
+    team_ids = player_base_df['TEAM_ID'].unique()
+    player_opp_df = []
+    for id in team_ids:
+        player_opp = leagueplayerondetails.LeaguePlayerOnDetails(team_id=id, measure_type_detailed_defense='Opponent', per_mode_detailed='PerGame')
+        p_opp_df = player_opp.get_data_frames()[0]
+        player_opp_df.append(p_opp_df)
+        time.sleep(1)
+    player_opp_df = pd.concat(player_opp_df, ignore_index=True)
+    player_opp_df = player_opp_df.drop(columns=["GROUP_SET", "COURT_STATUS", "W", "L", "W_PCT", "OPP_FGM", "OPP_FGA", "OPP_FG3M", "OPP_FG3A",
+        "OPP_FTM", "OPP_FTA", "OPP_FT_PCT", "OPP_OREB", "OPP_DREB", "OPP_REB", "OPP_AST", "OPP_TOV",
+        "OPP_STL", "OPP_BLK", "OPP_BLKA", "OPP_PF", "OPP_PFD", "OPP_PTS", "PLUS_MINUS",
+        "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK", "OPP_FGM_RANK", "OPP_FGA_RANK",
+        "OPP_FG_PCT_RANK", "OPP_FG3M_RANK", "OPP_FG3A_RANK", "OPP_FG3_PCT_RANK", "OPP_FTM_RANK",
+        "OPP_FTA_RANK", "OPP_FT_PCT_RANK", "OPP_OREB_RANK", "OPP_DREB_RANK", "OPP_REB_RANK",
+        "OPP_AST_RANK", "OPP_TOV_RANK", "OPP_STL_RANK", "OPP_BLK_RANK", "OPP_BLKA_RANK", "OPP_PF_RANK",
+        "OPP_PFD_RANK", "OPP_PTS_RANK", "PLUS_MINUS_RANK", 'TEAM_NAME', 'VS_PLAYER_NAME',
+        'TEAM_ID', 
+        'TEAM_ABBREVIATION', 
+        'GP', 
+        'MIN'])
+    player_opp_df.rename(columns={'VS_PLAYER_ID':'PLAYER_ID'}, inplace=True)
+
+    player_def = leaguedashplayerstats.LeagueDashPlayerStats(measure_type_detailed_defense='Defense', per_mode_detailed='PerGame')
+    player_def_df = player_def.get_data_frames()[0]
+    player_def_df = player_def_df.drop(columns=["AGE", "W", "L", "W_PCT", "DEF_RATING", "DREB", "DREB_PCT", "PCT_DREB", "STL", "PCT_STL", 
+        "BLK", "PCT_BLK", "OPP_PTS_OFF_TOV", "OPP_PTS_2ND_CHANCE", "OPP_PTS_FB", "OPP_PTS_PAINT", 
+        "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK", "DEF_RATING_RANK", "DREB_RANK", 
+        "DREB_PCT_RANK", "PCT_DREB_RANK", "STL_RANK", "PCT_STL_RANK", "BLK_RANK", "PCT_BLK_RANK", 
+        "OPP_PTS_OFF_TOV_RANK", "OPP_PTS_2ND_CHANCE_RANK", "OPP_PTS_FB_RANK", "OPP_PTS_PAINT_RANK", 
+        "DEF_WS_RANK",'PLAYER_NAME', 
+        'NICKNAME', 
+        'TEAM_ID', 
+        'TEAM_ABBREVIATION', 
+        'GP', 
+        'MIN'])
+
+    player_past = leaguedashptstats.LeagueDashPtStats(player_or_team='Player', per_mode_simple='PerGame', pt_measure_type='Passing')
+    player_past_df = player_past.get_data_frames()[0]
+    player_past_df = player_past_df.drop(columns=["W", "L", "PASSES_MADE", "PASSES_RECEIVED", "AST", "FT_AST", "SECONDARY_AST", 
+        "AST_POINTS_CREATED", "AST_ADJ", "AST_TO_PASS_PCT", "AST_TO_PASS_PCT_ADJ",'PLAYER_NAME', 
+        'TEAM_ID', 
+        'TEAM_ABBREVIATION', 
+        'GP', 
+        'MIN'])
+    
+    player_sd = leaguedashptstats.LeagueDashPtStats(player_or_team='Player', per_mode_simple='PerGame', pt_measure_type='SpeedDistance')
+    player_sd_df = player_sd.get_data_frames()[0]
+    player_sd_df = player_sd_df.drop(columns=["W", "L", "MIN1", "DIST_MILES", "DIST_MILES_OFF", "DIST_MILES_DEF", "AVG_SPEED_OFF", "AVG_SPEED_DEF",'PLAYER_NAME', 
+        'TEAM_ID', 
+        'TEAM_ABBREVIATION', 
+        'GP', 
+        'MIN'])
+    
+    player_hustle = leaguehustlestatsplayer.LeagueHustleStatsPlayer(per_mode_time='PerGame')
+    player_hustle_df = player_hustle.get_data_frames()[0]
+    player_hustle_df = player_hustle_df.drop(columns=["AGE", "CONTESTED_SHOTS", "CONTESTED_SHOTS_2PT", "CONTESTED_SHOTS_3PT", 
+        "CHARGES_DRAWN", "SCREEN_ASSISTS", "SCREEN_AST_PTS", "OFF_LOOSE_BALLS_RECOVERED", 
+        "DEF_LOOSE_BALLS_RECOVERED", "PCT_LOOSE_BALLS_RECOVERED_OFF", "PCT_LOOSE_BALLS_RECOVERED_DEF", 
+        "OFF_BOXOUTS", "DEF_BOXOUTS", "BOX_OUT_PLAYER_TEAM_REBS", "BOX_OUT_PLAYER_REBS", 
+        "PCT_BOX_OUTS_OFF", "PCT_BOX_OUTS_DEF", "PCT_BOX_OUTS_TEAM_REB",'PLAYER_NAME',  
+        'TEAM_ID', 
+        'TEAM_ABBREVIATION', 
+        'G', 
+        'MIN'])
+    
+    player_ids = player_base_df['PLAYER_ID'].unique()
+    player_dunk_df = []
+    for id in player_ids:
+        player_dunk = playerdashboardbyshootingsplits.PlayerDashboardByShootingSplits(player_id=id, per_mode_detailed="PerGame")
+        player_df = player_dunk.get_data_frames()[5]
+        dunk_df = player_df[player_df['GROUP_VALUE'] == 'Dunk']
+
+        if not dunk_df.empty:
+            dunk_fga = dunk_df['FGA'].values[0]
+            player_dunk_df.append({'PLAYER_ID': id, 'DUNK_FGA': dunk_fga})
+        print(f"{id} added")
+        time.sleep(10)
+            
+    player_dunk_df = pd.DataFrame(player_dunk_df)
+
+    player_score = leaguedashplayerstats.LeagueDashPlayerStats(measure_type_detailed_defense='Scoring', per_mode_detailed='PerGame')
+    player_score_df = player_score.get_data_frames()[0]
+    player_score_df = player_score_df.drop(columns=["PLAYER_NAME", "NICKNAME", "TEAM_ID", "TEAM_ABBREVIATION", "AGE", "GP", "W", "L", "W_PCT", 
+            "MIN", "PCT_FGA_2PT", "PCT_FGA_3PT", "PCT_PTS_2PT", "PCT_PTS_2PT_MR", "PCT_PTS_3PT", "PCT_PTS_FB", 
+            "PCT_PTS_FT", "PCT_PTS_OFF_TOV", "PCT_PTS_PAINT", "PCT_AST_2PM", "PCT_UAST_2PM", "PCT_AST_3PM", 
+            "PCT_UAST_3PM", "PCT_AST_FGM", "FGM", "FGA", "FG_PCT", "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", 
+            "MIN_RANK", "PCT_FGA_2PT_RANK", "PCT_FGA_3PT_RANK", "PCT_PTS_2PT_RANK", "PCT_PTS_2PT_MR_RANK", 
+            "PCT_PTS_3PT_RANK", "PCT_PTS_FB_RANK", "PCT_PTS_FT_RANK", "PCT_PTS_OFF_TOV_RANK", 
+            "PCT_PTS_PAINT_RANK", "PCT_AST_2PM_RANK", "PCT_UAST_2PM_RANK", "PCT_AST_3PM_RANK", 
+            "PCT_UAST_3PM_RANK", "PCT_AST_FGM_RANK", "PCT_UAST_FGM_RANK", "FGM_RANK", "FGA_RANK", "FG_PCT_RANK"])
+
+    dataframes= [player_base_df, player_adv_df, player_def_df, player_hustle_df, player_misc_df, player_opp_df, player_past_df, player_sd_df, player_dunk_df, player_score_df]
+    combined_df = dataframes[0]
+
+    for df in dataframes[1:]: combined_df = pd.merge(combined_df, df, on='PLAYER_ID', how='inner')
+
+    # Drop duplicates from combined_df
+    combined_df = combined_df.drop_duplicates(subset=["PLAYER_ID"], keep="first")
+
+    # Filter combined_df for players with MIN >= 15 and GP >= 20
+    filtered_df = combined_df[(combined_df["MIN"] >= 15) & (combined_df["GP"] >= 20)]
+
+    # Function for Min-Max Scaling (0-1)
+    def normalize(series):
+        scaler = MinMaxScaler()
+        return scaler.fit_transform(series.values.reshape(-1, 1)).flatten()
+
+    # Function for Softer Rescaling
+    def rescale(series, factor=10):
+        return ((series - series.mean()) / series.std() * factor + 50).clip(0, 100)
+
+    # Scoring Formula
+    filtered_df["Scoring"] = (0.30 * normalize(filtered_df["PTS"]) +
+                            0.20 * normalize(filtered_df["FGA"]) +
+                            0.10 * normalize(filtered_df["FTA"]) +
+                            0.15 * normalize(filtered_df["TS_PCT"]) +
+                            0.15 * normalize(filtered_df["EFG_PCT"]) +
+                            0.10 * normalize(filtered_df["PCT_UAST_FGM"])) * 100
+    filtered_df["Scoring"] = rescale(filtered_df["Scoring"], factor=12)
+
+    # Playmaking Formula
+    filtered_df["Playmaking"] = (0.35 * normalize(filtered_df["AST"]) +
+                                0.30 * normalize(filtered_df["POTENTIAL_AST"]) +
+                                0.10 * normalize(filtered_df["USG_PCT"]) -
+                                0.20 * normalize(filtered_df["TOV"])) * 100
+    filtered_df["Playmaking"] = rescale(filtered_df["Playmaking"], factor=11)
+
+    # Rebounding Formula
+    filtered_df["Rebounding"] = (0.40 * normalize(filtered_df["REB"]) +
+                                0.35 * normalize(filtered_df["OREB"]) +
+                                0.35 * normalize(filtered_df["DREB"])) * 100
+    filtered_df["Rebounding"] = rescale(filtered_df["Rebounding"], factor=12)
+
+    # Defense Formula
+    filtered_df["Defense"] = (0.25 * normalize(filtered_df["BLK"]) +
+                            0.10 * normalize(filtered_df["DEFLECTIONS"]) +
+                            0.10 * normalize(filtered_df["STL"]) -
+                            0.15 * normalize(filtered_df["PF"]) +
+                            #0.15 * normalize(filtered_df["DEF_WS"]) -
+                            0.25 * normalize(filtered_df["OPP_FG_PCT"]) -
+                            0.20 * normalize(filtered_df["OPP_FG3_PCT"])) * 100
+    filtered_df["Defense"] = rescale(filtered_df["Defense"], factor=10)
+
+    # Athleticism Formula
+    filtered_df["Athleticism"] = (0.20 * normalize(filtered_df["PTS_FB"]) +
+                                0.15 * normalize(filtered_df["DIST_FEET"]) +
+                                0.15 * normalize(filtered_df["AVG_SPEED"]) +
+                                0.20 * normalize(filtered_df["LOOSE_BALLS_RECOVERED"]) +
+                                0.05 * normalize(filtered_df["BOX_OUTS"]) +
+                                0.15 * normalize(filtered_df["PCT_BOX_OUTS_REB"]) +
+                                0.10 * normalize(filtered_df["DUNK_FGA"])) * 100
+    filtered_df["Athleticism"] = rescale(filtered_df["Athleticism"], factor=12)
+
+    filtered_df.to_sql(name=table, con=db, if_exists='replace', index=False)
+    print("Grades updated")
+
 scheduler = BackgroundScheduler()
 
 @scheduler.scheduled_job('cron', hour=2, timezone='US/Central')
@@ -243,6 +452,7 @@ def runPrograms():
     fetchPlayers()
     fetchStandings()
     fetchGamelogs()
+    fetchGrades()
 
 scheduler.start()
 
@@ -327,6 +537,7 @@ def nbaPlayerInfo(playerId):
 
     player_info = (pd.read_sql(f"SELECT * FROM players WHERE Player_ID = {playerId}", con=db)).to_dict(orient='records')
     player_log = pd.read_sql(f"SELECT *, STR_TO_DATE(GAME_DATE, '%M %d, %Y') AS formatted_date FROM gamelogs WHERE Player_ID = {playerId} ORDER BY formatted_date ASC", con=db)
+    player_grades = (pd.read_sql(f"SELECT PTS, REB, AST, STL, BLK, TOV, Scoring, Playmaking, Rebounding, Defense, Athleticism FROM grades WHERE Player_ID = {playerId}", con=db)).to_dict(orient='records')
 
 
     gamelogs = []
@@ -369,9 +580,14 @@ def nbaPlayerInfo(playerId):
     player_profile = {
         'player_info': player_info,
         'gamelogs': gamelogs,
+        'player_grades': player_grades
     }
 
     return jsonify(player_profile)
 
 if __name__ == '__main__':
+    # fetchPlayers()
+    # fetchStandings()
+    # fetchGamelogs()
+    # fetchGrades()
     app.run(debug=True)

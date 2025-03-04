@@ -7,4 +7,5 @@ requests
 random
 sqlalchemy
 mysql-connnector-python
-gunicorn
+os
+dotenv
