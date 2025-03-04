@@ -1,11 +1,8 @@
 Flask
 pandas
-time
 apscheduler
 nba_api
+scikit-learn
 requests
-random
 sqlalchemy
-mysql-connnector-python
-os
-dotenv
+python-dotenv
