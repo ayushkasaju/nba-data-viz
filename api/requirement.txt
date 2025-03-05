@@ -6,3 +6,5 @@ scikit-learn
 requests
 sqlalchemy
 python-dotenv
+mysql-connector-driver
+gunicorn

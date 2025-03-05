@@ -357,14 +357,32 @@ def fetchGrades():
     player_ids = player_base_df['PLAYER_ID'].unique()
     player_dunk_df = []
     for id in player_ids:
-        player_dunk = playerdashboardbyshootingsplits.PlayerDashboardByShootingSplits(player_id=id, per_mode_detailed="PerGame")
-        player_df = player_dunk.get_data_frames()[5]
-        dunk_df = player_df[player_df['GROUP_VALUE'] == 'Dunk']
+        retry_count = 0
+        while retry_count < 8:
+            try:
+                player_dunk = playerdashboardbyshootingsplits.PlayerDashboardByShootingSplits(
+                    player_id=id, per_mode_detailed="PerGame", timeout=60
+                )
+                player_df = player_dunk.get_data_frames()[5]
+                dunk_df = player_df[player_df['GROUP_VALUE'] == 'Dunk']
 
-        if not dunk_df.empty:
-            dunk_fga = dunk_df['FGA'].values[0]
-            player_dunk_df.append({'PLAYER_ID': id, 'DUNK_FGA': dunk_fga})
-        print(f"{id} added")
+                if not dunk_df.empty:
+                    dunk_fga = dunk_df['FGA'].values[0]
+                    player_dunk_df.append({'PLAYER_ID': id, 'DUNK_FGA': dunk_fga})
+                    print(f"{id} dunk data added")
+                else:
+                    print(f"{id} has no dunk data")
+                
+                break  # Exit retry loop on success
+
+            except (requests.exceptions.RequestException, Timeout) as e:
+                wait_time = (2 ** retry_count) + random.uniform(0, 1)  # Exponential backoff
+                print(f"Retry {retry_count + 1} for {id} after {wait_time:.2f}s: {e}")
+                time.sleep(wait_time)
+                retry_count += 1
+        else:
+            print(f"Max retries reached for player {id}.")
+        
         time.sleep(10)
             
     player_dunk_df = pd.DataFrame(player_dunk_df)
@@ -590,4 +608,4 @@ if __name__ == '__main__':
     # fetchStandings()
     # fetchGamelogs()
     # fetchGrades()
-    app.run(debug=True)
+    app.run(debug=False)
