@@ -164,19 +164,88 @@ const Profile = () => {
     <>
       <div className="grid md:grid-cols-2 gap-6">
         {/* Bio Section */}
-        <div className="text-white p-6 rounded-2xl flex flex-col">
-          {profile.player_info[0]?.PLAYER_IMAGE && (
-            <img
-              src={profile.player_info[0].PLAYER_IMAGE}
-              alt={profile.player_info[0].PLAYER_FULL_NAME}
-              className="w-32 h-32 rounded-full mb-4 border-4 border-blue-500"
-            />
-          )}
-          <h1 className="text-4xl font-extrabold">{playerName}</h1>
-          <p><span className="font-semibold">Team:</span> {profile.player_info[0]?.TEAM_FULL_NAME || "N/A"}</p>
-          <p><span className="font-semibold">Position:</span> {profile.player_info[0]?.POSITION || "N/A"}</p>
-          <p><span className="font-semibold">Height:</span> {profile.player_info[0]?.HEIGHT || "N/A"}</p>
-          <p><span className="font-semibold">Weight:</span> {profile.player_info[0]?.WEIGHT || "N/A"}</p>
+        <div className="text-white p-6 rounded-2xl">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+            {/* Player Image */}
+            {profile.player_info[0]?.PLAYER_IMAGE && (
+              <div className="flex-shrink-0 relative">
+                <img
+                  src={profile.player_info[0].PLAYER_IMAGE}
+                  alt={profile.player_info[0].PLAYER_FULL_NAME}
+                  className="w-32 h-32 rounded-full border-4 border-gradient-to-r from-blue-500 to-purple-500 object-cover transform hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-md -z-10 animate-pulse"></div>
+              </div>
+            )}
+            
+            {/* Player Info */}
+            <div className="flex-1">
+              <h1 className="text-3xl md:text-4xl font-extrabold mb-4 text-center md:text-left bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                {playerName}
+              </h1>
+              
+              {/* Basic Info Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <div className="flex items-center">
+                  <span className="font-semibold text-blue-300 mr-2">Team:</span> 
+                  <span className="text-gray-100">{profile.player_info[0]?.TEAM_FULL_NAME || "N/A"}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="font-semibold text-blue-300 mr-2">Position:</span> 
+                  <span className="text-gray-100">{profile.player_info[0]?.POSITION || "N/A"}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="font-semibold text-blue-300 mr-2">Height:</span> 
+                  <span className="text-gray-100">{profile.player_info[0]?.HEIGHT || "N/A"}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="font-semibold text-blue-300 mr-2">Weight:</span> 
+                  <span className="text-gray-100">{profile.player_info[0]?.WEIGHT || "N/A"}</span>
+                </div>
+                {profile.player_info[0]?.DRAFT_YEAR !== 0 ? <div className="flex items-center">
+                  <span className="font-semibold text-blue-300 mr-2">Draft:</span> 
+                  <span className="text-gray-100">{profile.player_info[0]?.DRAFT_YEAR || "N/A"} Round {profile.player_info[0]?.DRAFT_ROUND || "N/A"} Pick {profile.player_info[0]?.DRAFT_NUMBER || "N/A"}</span>
+                </div> : <></>}
+              </div>
+
+              {/* Stats Grid */}
+              <h2 className="text-lg font-semibold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Season Averages
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                <div className="relative p-2 rounded-lg hover:bg-blue-500/10 transition-colors">
+                  <span className="font-semibold text-blue-300">PTS:</span> 
+                  <span className="ml-1 text-white">{profile.player_grades[0]?.PTS || "N/A"}</span>
+                  <div className="absolute inset-0 border border-blue-500/20 rounded-lg pointer-events-none"></div>
+                </div>
+                <div className="relative p-2 rounded-lg hover:bg-blue-500/10 transition-colors">
+                  <span className="font-semibold text-blue-300">REB:</span> 
+                  <span className="ml-1 text-white">{profile.player_grades[0]?.REB || "N/A"}</span>
+                  <div className="absolute inset-0 border border-blue-500/20 rounded-lg pointer-events-none"></div>
+                </div>
+                <div className="relative p-2 rounded-lg hover:bg-blue-500/10 transition-colors">
+                  <span className="font-semibold text-blue-300">AST:</span> 
+                  <span className="ml-1 text-white">{profile.player_grades[0]?.AST || "N/A"}</span>
+                  <div className="absolute inset-0 border border-blue-500/20 rounded-lg pointer-events-none"></div>
+                </div>
+                <div className="relative p-2 rounded-lg hover:bg-blue-500/10 transition-colors">
+                  <span className="font-semibold text-blue-300">BLK:</span> 
+                  <span className="ml-1 text-white">{profile.player_grades[0]?.BLK || "N/A"}</span>
+                  <div className="absolute inset-0 border border-blue-500/20 rounded-lg pointer-events-none"></div>
+                </div>
+                <div className="relative p-2 rounded-lg hover:bg-blue-500/10 transition-colors">
+                  <span className="font-semibold text-blue-300">STL:</span> 
+                  <span className="ml-1 text-white">{profile.player_grades[0]?.STL || "N/A"}</span>
+                  <div className="absolute inset-0 border border-blue-500/20 rounded-lg pointer-events-none"></div>
+                </div>
+                <div className="relative p-2 rounded-lg hover:bg-blue-500/10 transition-colors">
+                  <span className="font-semibold text-blue-300">TOV:</span> 
+                  <span className="ml-1 text-white">{profile.player_grades[0]?.TOV || "N/A"}</span>
+                  <div className="absolute inset-0 border border-blue-500/20 rounded-lg pointer-events-none"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Radar Chart Section */}
@@ -411,62 +480,64 @@ const Profile = () => {
         </div>
 
         {/* Game Log Section */}
-        <div className="text-white">
-          <h2>All Gamelogs</h2>
-          <table className="table-auto w-full text-sm text-left text-gray-500 dark:text-gray-400">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Matchup</th>
-                <th>W/L</th>
-                <th>Mins</th>
-                <th>FG</th>
-                <th>FG%</th>
-                <th>3PT</th>
-                <th>3PT%</th>
-                <th>FT</th>
-                <th>FT%</th>
-                <th>Reb</th>
-                <th>Ast</th>
-                <th>Blk</th>
-                <th>Stl</th>
-                <th>PF</th>
-                <th>Pts</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentRows.map((game, index) => (
-                <tr key={index}>
-                  <td>{game.game_date}</td>
-                  <td>{game.matchup}</td>
-                  <td>{game.outcome}</td>
-                  <td>{game.mins_played}</td>
-                  <td>{game.fg_made}-{game.fg_att}</td>
-                  <td>{`${Math.round(game.fg_pct * 10000) / 100}%`}</td>
-                  <td>{game.fg3_made}-{game.fg3_att}</td>
-                  <td>{`${Math.round(game.fg3_pct * 10000) / 100}%`}</td>
-                  <td>{game.ft_made}-{game.ft_att}</td>
-                  <td>{`${Math.round(game.ft_pct * 10000) / 100}%`}</td>
-                  <td>{game.reb}</td>
-                  <td>{game.ast}</td>
-                  <td>{game.blk}</td>
-                  <td>{game.stl}</td>
-                  <td>{game.foul}</td>
-                  <td>{game.pts}</td>
+        <div className="mt-6 text-white">
+          <h2 className="text-xl md:text-2xl mb-4">All Gamelogs</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs md:text-sm text-left">
+              <thead className="bg-gray-800">
+                <tr>
+                  <th className="p-2">Date</th>
+                  <th className="p-2">Matchup</th>
+                  <th className="p-2">W/L</th>
+                  <th className="p-2">Mins</th>
+                  <th className="p-2">FG</th>
+                  <th className="p-2">FG%</th>
+                  <th className="p-2">3PT</th>
+                  <th className="p-2">3PT%</th>
+                  <th className="p-2">FT</th>
+                  <th className="p-2">FT%</th>
+                  <th className="p-2">Reb</th>
+                  <th className="p-2">Ast</th>
+                  <th className="p-2">Blk</th>
+                  <th className="p-2">Stl</th>
+                  <th className="p-2">PF</th>
+                  <th className="p-2">Pts</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <div>
+              </thead>
+              <tbody>
+                {currentRows.map((game, index) => (
+                  <tr key={index} className="border-b border-gray-700">
+                    <td className="p-2">{game.game_date}</td>
+                    <td className="p-2">{game.matchup}</td>
+                    <td className="p-2">{game.outcome}</td>
+                    <td className="p-2">{game.mins_played}</td>
+                    <td className="p-2">{game.fg_made}-{game.fg_att}</td>
+                    <td className="p-2">{`${Math.round(game.fg_pct * 10000) / 100}%`}</td>
+                    <td className="p-2">{game.fg3_made}-{game.fg3_att}</td>
+                    <td className="p-2">{`${Math.round(game.fg3_pct * 10000) / 100}%`}</td>
+                    <td className="p-2">{game.ft_made}-{game.ft_att}</td>
+                    <td className="p-2">{`${Math.round(game.ft_pct * 10000) / 100}%`}</td>
+                    <td className="p-2">{game.reb}</td>
+                    <td className="p-2">{game.ast}</td>
+                    <td className="p-2">{game.blk}</td>
+                    <td className="p-2">{game.stl}</td>
+                    <td className="p-2">{game.foul}</td>
+                    <td className="p-2">{game.pts}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex justify-center gap-4 mt-4">
             <button
-              className="bg-[#007ea7] w-20 rounded-md font-medium mx-3 my-3 py-1 text-white"
+              className="bg-[#007ea7] w-20 rounded-md text-sm py-2 text-white disabled:opacity-50"
               onClick={() => paginate(currentPage - 1)}
               disabled={currentPage === 1}
             >
               Previous
             </button>
             <button
-              className="bg-[#007ea7] w-20 rounded-md font-medium mx-3 my-3 py-1 text-white"
+              className="bg-[#007ea7] w-20 rounded-md text-sm py-2 text-white disabled:opacity-50"
               onClick={() => paginate(currentPage + 1)}
               disabled={indexOfLastRow >= profile.gamelogs.length}
             >
