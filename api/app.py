@@ -604,8 +604,8 @@ def nbaPlayerInfo(playerId):
     return jsonify(player_profile)
 
 if __name__ == '__main__':
-    fetchPlayers()
-    fetchStandings()
-    fetchGamelogs()
-    fetchGrades()
+    # fetchPlayers()
+    # fetchStandings()
+    # fetchGamelogs()
+    # fetchGrades()
     app.run(debug=False)
