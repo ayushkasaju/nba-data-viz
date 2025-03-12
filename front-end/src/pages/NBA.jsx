@@ -9,7 +9,6 @@ const NBA = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log(process.env.REACT_APP_API_URL)
       const response = await fetch(`${process.env.REACT_APP_API_URL}/games`);
       const data = await response.json();
       setGames(data);
