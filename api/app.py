@@ -3,6 +3,7 @@ from flask_cors import CORS
 import pandas as pd
 import time
 from apscheduler.schedulers.background import BackgroundScheduler
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, before_sleep_log
 
 from nba_api.stats.endpoints import playergamelog
 from nba_api.stats.endpoints import playerindex
@@ -467,15 +468,26 @@ def fetchGrades():
     combined_df.to_sql(name=table, con=db, if_exists='replace', index=False)
     print("Grades updated")
 
-scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler(timezone='US/Central')
 
-@scheduler.scheduled_job('cron', hour=2, timezone='US/Central')
+@retry(
+    stop=stop_after_attempt(8),  # Retry up to 8 times
+    wait=wait_exponential(multiplier=1, min=4, max=60),  # Backoff: 4s, 8s, 16s, up to 60s
+    retry=retry_if_exception_type((requests.exceptions.RequestException, Timeout, Exception)),  # Catch timeouts and general errors
+)
 def runPrograms():
-    fetchPlayers()
-    fetchStandings()
-    fetchGamelogs()
-    fetchGrades()
+    print("Starting scheduled fetch jobs")
+    try:
+        fetchPlayers()
+        fetchStandings()
+        fetchGamelogs()
+        fetchGrades()
+        print("All fetch jobs completed successfully")
+    except Exception as e:
+        print(f"Scheduled run failed: {str(e)}")
+        raise  # Re-raise to trigger retry
 
+scheduler.add_job(runPrograms, 'cron', hour=2, id='fetch_jobs')
 scheduler.start()
 
 @app.route('/games')
