@@ -471,7 +471,7 @@ def fetchGrades():
 scheduler = BackgroundScheduler(timezone='US/Central')
 
 @retry(
-    stop=stop_after_attempt(8),  # Retry up to 8 times
+    stop=stop_after_attempt(10),  # Retry up to 10 times
     wait=wait_exponential(multiplier=1, min=4, max=60),  # Backoff: 4s, 8s, 16s, up to 60s
     retry=retry_if_exception_type((requests.exceptions.RequestException, Timeout, Exception)),  # Catch timeouts and general errors
 )
@@ -487,7 +487,7 @@ def runPrograms():
         print(f"Scheduled run failed: {str(e)}")
         raise  # Re-raise to trigger retry
 
-scheduler.add_job(runPrograms, 'cron', hour=2, id='fetch_jobs')
+scheduler.add_job(runPrograms, 'cron', hour=3, id='fetch_jobs')
 scheduler.start()
 
 @app.route('/games')
