@@ -17,7 +17,7 @@ const Home = () => {
             strings={['NBA', 'NFL', 'UFC']} typeSpeed={120} backSpeed={140} loop/>
           </div>
           {/* <p className='md:text-2xl text-xl font-bold text-gray-500'>Monitor analytics to increase revenue from every sport.</p> */}
-          <p className='md:text-2xl text-xl font-bold text-gray-500'>Proceed to the dropdown to get started</p>
+          <p className='md:text-2xl text-xl font-bold text-gray-500'>Proceed to the dropdown to get started!</p>
           {/* <button className='bg-[#007ea7] w-[200px] rounded-md font-medium my-6 mx-auto py-3 text-white'>Get Started</button> */}
         </div>
       </div>
