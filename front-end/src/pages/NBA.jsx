@@ -9,7 +9,14 @@ const NBA = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/games`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/games`, {
+        method: 'GET',
+          redirect: 'follow',
+          headers: {
+            'Accept': 'application/json',
+            'ngrok-skip-browser-warning': 'true' // Bypass ngrok warning
+          }
+      });
       const data = await response.json();
       setGames(data);
     };
@@ -19,7 +26,14 @@ const NBA = () => {
 
   const handlePlayers = async (gameId) => {
     try {
-      const response = await fetch(`/games/${gameId}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/games/${gameId}`, {
+        method: 'GET',
+          redirect: 'follow',
+          headers: {
+            'Accept': 'application/json',
+            'ngrok-skip-browser-warning': 'true' // Bypass ngrok warning
+          }
+      });
       
       if (response.ok) {
         const playerData = await response.json();

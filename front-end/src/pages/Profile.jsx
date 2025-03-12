@@ -80,7 +80,14 @@ const Profile = () => {
   useEffect (() => {
     const fetchTeammates = async () => {
       try {
-        const response = await fetch("/players");
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/players`, {
+          method: 'GET',
+            redirect: 'follow',
+            headers: {
+              'Accept': 'application/json',
+              'ngrok-skip-browser-warning': 'true' // Bypass ngrok warning
+            }
+        });
         const data = await response.json();
         const playerTeamId = profile.player_info[0]?.TEAM_ID;
 
@@ -99,7 +106,14 @@ const Profile = () => {
     const fetchTeammateGamelogs = async () => {
       if (!selectedTeammate) return;
       try {
-        const response = await fetch(`/${sport}/player/${selectedTeammate}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/${sport}/player/${selectedTeammate}`, {
+          method: 'GET',
+            redirect: 'follow',
+            headers: {
+              'Accept': 'application/json',
+              'ngrok-skip-browser-warning': 'true' // Bypass ngrok warning
+            }
+        });
         const data = await response.json();
         setTeammateGamelogs(data.gamelogs);
       } catch (error) {

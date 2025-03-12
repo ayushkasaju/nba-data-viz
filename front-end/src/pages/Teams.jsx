@@ -7,7 +7,14 @@ const Teams = () => {
 
   useEffect(() => {
     const fetchTeams = async () => {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/teams`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/teams`, {
+        method: 'GET',
+          redirect: 'follow',
+          headers: {
+            'Accept': 'application/json',
+            'ngrok-skip-browser-warning': 'true' // Bypass ngrok warning
+          }
+      });
       const data = await response.json();
       setTeams(data);
     };

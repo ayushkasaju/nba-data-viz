@@ -7,7 +7,14 @@ const Players = () => {
 
   useEffect(() => {
     const fetchPlayers = async () => {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/players`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/players`, {
+        method: 'GET',
+          redirect: 'follow',
+          headers: {
+            'Accept': 'application/json',
+            'ngrok-skip-browser-warning': 'true' // Bypass ngrok warning
+          }
+      });
       const data = await response.json();
       setPlayers(data);
     };
