@@ -7,7 +7,7 @@ const Players = () => {
 
   useEffect(() => {
     const fetchPlayers = async () => {
-      const response = await fetch(`/players`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/players`);
       const data = await response.json();
       setPlayers(data);
     };

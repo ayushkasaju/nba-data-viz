@@ -7,7 +7,7 @@ const Teams = () => {
 
   useEffect(() => {
     const fetchTeams = async () => {
-      const response = await fetch(`/teams`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/teams`);
       const data = await response.json();
       setTeams(data);
     };

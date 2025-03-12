@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 import pandas as pd
 import time
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -26,6 +27,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 app = Flask(__name__)
+CORS(app)
 
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
@@ -409,7 +411,7 @@ def fetchGrades():
     combined_df = combined_df.drop_duplicates(subset=["PLAYER_ID"], keep="first")
 
     # Filter combined_df for players with MIN >= 15 and GP >= 20
-    filtered_df = combined_df[(combined_df["MIN"] >= 15) & (combined_df["GP"] >= 20)]
+    # filtered_df = combined_df[(combined_df["MIN"] >= 15) & (combined_df["GP"] >= 20)]
 
     # Function for Min-Max Scaling (0-1)
     def normalize(series):
@@ -421,48 +423,48 @@ def fetchGrades():
         return ((series - series.mean()) / series.std() * factor + 50).clip(0, 100)
 
     # Scoring Formula
-    filtered_df["Scoring"] = (0.30 * normalize(filtered_df["PTS"]) +
-                            0.20 * normalize(filtered_df["FGA"]) +
-                            0.10 * normalize(filtered_df["FTA"]) +
-                            0.15 * normalize(filtered_df["TS_PCT"]) +
-                            0.15 * normalize(filtered_df["EFG_PCT"]) +
-                            0.10 * normalize(filtered_df["PCT_UAST_FGM"])) * 100
-    filtered_df["Scoring"] = rescale(filtered_df["Scoring"], factor=12)
+    combined_df["Scoring"] = (0.30 * normalize(combined_df["PTS"]) +
+                            0.20 * normalize(combined_df["FGA"]) +
+                            0.10 * normalize(combined_df["FTA"]) +
+                            0.15 * normalize(combined_df["TS_PCT"]) +
+                            0.15 * normalize(combined_df["EFG_PCT"]) +
+                            0.10 * normalize(combined_df["PCT_UAST_FGM"])) * 100
+    combined_df["Scoring"] = rescale(combined_df["Scoring"], factor=12)
 
     # Playmaking Formula
-    filtered_df["Playmaking"] = (0.35 * normalize(filtered_df["AST"]) +
-                                0.30 * normalize(filtered_df["POTENTIAL_AST"]) +
-                                0.10 * normalize(filtered_df["USG_PCT"]) -
-                                0.20 * normalize(filtered_df["TOV"])) * 100
-    filtered_df["Playmaking"] = rescale(filtered_df["Playmaking"], factor=11)
+    combined_df["Playmaking"] = (0.35 * normalize(combined_df["AST"]) +
+                                0.30 * normalize(combined_df["POTENTIAL_AST"]) +
+                                0.10 * normalize(combined_df["USG_PCT"]) -
+                                0.20 * normalize(combined_df["TOV"])) * 100
+    combined_df["Playmaking"] = rescale(combined_df["Playmaking"], factor=11)
 
     # Rebounding Formula
-    filtered_df["Rebounding"] = (0.40 * normalize(filtered_df["REB"]) +
-                                0.35 * normalize(filtered_df["OREB"]) +
-                                0.35 * normalize(filtered_df["DREB"])) * 100
-    filtered_df["Rebounding"] = rescale(filtered_df["Rebounding"], factor=12)
+    combined_df["Rebounding"] = (0.40 * normalize(combined_df["REB"]) +
+                                0.35 * normalize(combined_df["OREB"]) +
+                                0.35 * normalize(combined_df["DREB"])) * 100
+    combined_df["Rebounding"] = rescale(combined_df["Rebounding"], factor=12)
 
     # Defense Formula
-    filtered_df["Defense"] = (0.25 * normalize(filtered_df["BLK"]) +
-                            0.10 * normalize(filtered_df["DEFLECTIONS"]) +
-                            0.10 * normalize(filtered_df["STL"]) -
-                            0.15 * normalize(filtered_df["PF"]) +
-                            #0.15 * normalize(filtered_df["DEF_WS"]) -
-                            0.25 * normalize(filtered_df["OPP_FG_PCT"]) -
-                            0.20 * normalize(filtered_df["OPP_FG3_PCT"])) * 100
-    filtered_df["Defense"] = rescale(filtered_df["Defense"], factor=10)
+    combined_df["Defense"] = (0.25 * normalize(combined_df["BLK"]) +
+                            0.10 * normalize(combined_df["DEFLECTIONS"]) +
+                            0.10 * normalize(combined_df["STL"]) -
+                            0.15 * normalize(combined_df["PF"]) +
+                            #0.15 * normalize(combined_df["DEF_WS"]) -
+                            0.25 * normalize(combined_df["OPP_FG_PCT"]) -
+                            0.20 * normalize(combined_df["OPP_FG3_PCT"])) * 100
+    combined_df["Defense"] = rescale(combined_df["Defense"], factor=10)
 
     # Athleticism Formula
-    filtered_df["Athleticism"] = (0.20 * normalize(filtered_df["PTS_FB"]) +
-                                0.15 * normalize(filtered_df["DIST_FEET"]) +
-                                0.15 * normalize(filtered_df["AVG_SPEED"]) +
-                                0.20 * normalize(filtered_df["LOOSE_BALLS_RECOVERED"]) +
-                                0.05 * normalize(filtered_df["BOX_OUTS"]) +
-                                0.15 * normalize(filtered_df["PCT_BOX_OUTS_REB"]) +
-                                0.10 * normalize(filtered_df["DUNK_FGA"])) * 100
-    filtered_df["Athleticism"] = rescale(filtered_df["Athleticism"], factor=12)
+    combined_df["Athleticism"] = (0.20 * normalize(combined_df["PTS_FB"]) +
+                                0.15 * normalize(combined_df["DIST_FEET"]) +
+                                0.15 * normalize(combined_df["AVG_SPEED"]) +
+                                0.20 * normalize(combined_df["LOOSE_BALLS_RECOVERED"]) +
+                                0.05 * normalize(combined_df["BOX_OUTS"]) +
+                                0.15 * normalize(combined_df["PCT_BOX_OUTS_REB"]) +
+                                0.10 * normalize(combined_df["DUNK_FGA"])) * 100
+    combined_df["Athleticism"] = rescale(combined_df["Athleticism"], factor=12)
 
-    filtered_df.to_sql(name=table, con=db, if_exists='replace', index=False)
+    combined_df.to_sql(name=table, con=db, if_exists='replace', index=False)
     print("Grades updated")
 
 scheduler = BackgroundScheduler()

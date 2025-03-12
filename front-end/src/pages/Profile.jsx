@@ -67,7 +67,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`/nba/player/${playerId}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/nba/player/${playerId}`);
         const data = await response.json();
         setProfile(data);
       } catch (error) {
