@@ -24,11 +24,17 @@ import sqlalchemy
 import os
 from dotenv import load_dotenv
 
-
+load_dotenv()
 app = Flask(__name__)
 
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_HOST = os.getenv('DB_HOST')
+DB_NAME = os.getenv('DB_NAME')
+
+db = sqlalchemy.create_engine("mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}")
+
 def fetchPlayers():
-    db = sqlalchemy.create_engine("mysql+mysqlconnector://root:password@localhost/nba2024")
     table = "players"
 
     # Fetch player data from the NBA API
@@ -85,7 +91,6 @@ def fetchPlayers():
     print("Players table updated successfully with all required fields!")
 
 def fetchTeams():
-    db = sqlalchemy.create_engine("mysql+mysqlconnector://root:password@localhost/nba2024")
     table = "teams"
 
     team_db = pd.read_sql("SELECT DISTINCT TEAM_ID, TEAM_FULL_NAME FROM PLAYERS", con=db)
@@ -107,7 +112,6 @@ def fetchTeams():
     print("teams added to database")
 
 def fetchGamelogs():
-    db = sqlalchemy.create_engine("mysql+mysqlconnector://root:password@localhost/nba2024")
     table = "gamelogs"
     
     active = playerindex.PlayerIndex()
@@ -232,7 +236,6 @@ def fetchGamelogs():
     gamelog_df.to_sql(name=table, con=db, if_exists='append', index=False)
 
 def fetchStandings():
-    db = sqlalchemy.create_engine("mysql+mysqlconnector://root:password@localhost/nba2024")
     table = "standings"
 
     standings_data = []
@@ -245,7 +248,6 @@ def fetchStandings():
     print("standings updated")
 
 def fetchGrades():
-    db = sqlalchemy.create_engine("mysql+mysqlconnector://root:password@localhost/nba2024")
     table = "grades"
 
 
@@ -498,8 +500,6 @@ def games():
 
 @app.route('/players')
 def players():
-    db = sqlalchemy.create_engine("mysql+mysqlconnector://root:password@localhost/nba2024")
-
     players_db = pd.read_sql("SELECT TEAM_ID, TEAM_FULL_NAME, PLAYER_ID, PLAYER_FULL_NAME, POSITION, TEAM_NAME, JERSEY_NUMBER FROM players", con=db)
 
     players_dict = {}
@@ -513,8 +513,6 @@ def players():
 
 @app.route('/teams')
 def teams():
-    db = sqlalchemy.create_engine("mysql+mysqlconnector://root:password@localhost/nba2024")
-
     teams_db = pd.read_sql("SELECT TEAM_ID, TEAM_FULL_NAME, CITY, ARENA, OWNER, GENERALMANAGER, HEADCOACH FROM teams", con=db)
     standings_db = pd.read_sql("SELECT TeamID, Conference, Record, PlayoffRank FROM standings", con=db)
 
@@ -531,8 +529,6 @@ def teams():
 
 @app.route('/games/<gameId>')
 def gamePlayers(gameId):
-    db = sqlalchemy.create_engine("mysql+mysqlconnector://root:password@localhost/nba2024")
-
     game_info = next((game for game in games() if game[0] == gameId), None)
     if game_info is None:
         return "Game not found", 404
@@ -551,8 +547,6 @@ def gamePlayers(gameId):
 
 @app.route('/nba/player/<playerId>')
 def nbaPlayerInfo(playerId):
-    db = sqlalchemy.create_engine("mysql+mysqlconnector://root:password@localhost/nba2024")
-
     player_info = (pd.read_sql(f"SELECT * FROM players WHERE Player_ID = {playerId}", con=db)).to_dict(orient='records')
     player_log = pd.read_sql(f"SELECT *, STR_TO_DATE(GAME_DATE, '%M %d, %Y') AS formatted_date FROM gamelogs WHERE Player_ID = {playerId} ORDER BY formatted_date ASC", con=db)
     player_grades = (pd.read_sql(f"SELECT PTS, REB, AST, STL, BLK, TOV, Scoring, Playmaking, Rebounding, Defense, Athleticism FROM grades WHERE Player_ID = {playerId}", con=db)).to_dict(orient='records')
