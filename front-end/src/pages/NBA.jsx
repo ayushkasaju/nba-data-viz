@@ -107,7 +107,7 @@ const NBA = () => {
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-gray-600 rounded-full" /> {/* Away team logo placeholder */}
-                    <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+                    <h2 className="text-l font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
                       {game[2]} @ {game[5]}
                     </h2>
                     <div className="w-8 h-8 bg-gray-600 rounded-full" /> {/* Home team logo placeholder */}
@@ -119,7 +119,7 @@ const NBA = () => {
                 <div className="text-center mb-6">
                   <p className="text-gray-300 text-sm mb-2">{getGameTime(game)}</p>
                   {getGameStatus(game).includes("Final") && (
-                    <p className="text-2xl font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                    <p className="text-xl font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                       {getTeamScores(game)}
                     </p>
                   )}
