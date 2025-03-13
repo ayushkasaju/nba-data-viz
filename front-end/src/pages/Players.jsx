@@ -89,7 +89,7 @@ const Players = () => {
             <h3 className="text-lg font-semibold text-white">{player.player_name}</h3>
           </div>
           <p className="text-gray-300 text-sm mb-4">
-            {player.position} | #{player.jersey_number}
+            {player.position} | {team.team_name} #{player.jersey_number}
           </p>
           <Link
             to={`/nba/player/${player.player_id}`}
