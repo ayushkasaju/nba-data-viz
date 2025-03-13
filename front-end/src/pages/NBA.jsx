@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 const NBA = () => {
   const [games, setGames] = useState([]);
   const [players, setPlayers] = useState([]);
-  const [selectedGameId, setSelectedGameId] = useState(null); // Track selected game
-  const [loadingPlayers, setLoadingPlayers] = useState(false); // Loading state for players
+  const [selectedGameId, setSelectedGameId] = useState(null);
+  const [loadingPlayers, setLoadingPlayers] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
@@ -53,12 +53,11 @@ const NBA = () => {
   };
 
   const getGameStatus = (game) => {
-    // Assuming game[4] or another index might hold status or time data in the future
-    return game[1]; // Placeholder; enhance with real data if available
+    return game[1];
   };
 
   const getGameTime = (game) => {
-    const date = new Date(game[6]); // Index 6 is the UTC game time
+    const date = new Date(game[8]);
     return date.toLocaleString("en-US", {
       weekday: "short",
       month: "short",
@@ -69,57 +68,72 @@ const NBA = () => {
     });
   };
 
+  const getTeamScores = (game) => {
+    const awayScore = game[4] ?? "N/A";
+    const homeScore = game[7] ?? "N/A";
+    return `${awayScore} - ${homeScore}`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 text-white">
       {/* Header */}
-      <header className="container mx-auto px-4 py-8 sticky top-0 backdrop-blur-md z-10">
-        <div className="flex items-center justify-between">
+      <header className="container mx-auto px-4 sticky top-0 backdrop-blur-md z-10">
+        <div className="flex items-center justify-between py-4">
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-cyan-300 to-purple-400 animate-pulse">
               NBA Today
             </span>
           </h1>
-          <div className="text-sm md:text-base font-medium text-gray-300">
+          <div className="text-sm md:text-base font-medium text-gray-300 bg-gray-800/50 px-3 py-1 rounded-full">
             {games.length} Games Today | {new Date().toLocaleDateString()}
           </div>
         </div>
       </header>
 
       {/* Games Section */}
-      <section className="container mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+      <section className="container mx-auto px-4 py-12">
+        <h2 className="text-2xl md:text-3xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
           Today’s Matchups
         </h2>
         {games.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {games.map((game) => (
               <div
                 key={game[0]}
                 className={`group bg-gray-800/70 backdrop-blur-md rounded-xl p-6 border 
                           ${selectedGameId === game[0] ? "border-cyan-400" : "border-gray-700"} 
-                          hover:border-blue-500 transition-all duration-300 transform hover:-translate-y-2 shadow-lg`}
+                          hover:border-blue-500 transition-all duration-300 transform hover:-translate-y-2 shadow-xl hover:shadow-2xl`}
               >
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">
-                    <span className="text-blue-400">{game[2]}</span> @{" "}
-                    <span className="text-cyan-300">{game[4]}</span>
-                  </h2>
-                  <span className="text-sm text-gray-400">{getGameStatus(game)}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gray-600 rounded-full" /> {/* Away team logo placeholder */}
+                    <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+                      {game[2]} @ {game[5]}
+                    </h2>
+                    <div className="w-8 h-8 bg-gray-600 rounded-full" /> {/* Home team logo placeholder */}
+                  </div>
+                  <span className="text-sm text-gray-400 bg-gray-700/50 px-2 py-1 rounded-full">
+                    {getGameStatus(game)}
+                  </span>
                 </div>
-                <div className="text-center text-gray-300 mb-4">
-                  {/* Placeholder for game time or odds if available in data */}
-                  <p>{getGameTime(game)}</p>
+                <div className="text-center mb-6">
+                  <p className="text-gray-300 text-sm mb-2">{getGameTime(game)}</p>
+                  {getGameStatus(game).includes("Final") && (
+                    <p className="text-2xl font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                      {getTeamScores(game)}
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={() => handlePlayers(game[0])}
                   className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 
                             text-white font-medium py-3 rounded-lg transition-all duration-300 transform group-hover:scale-105 
-                            flex items-center justify-center gap-2"
+                            flex items-center justify-center gap-2 shadow-md"
                   disabled={loadingPlayers && selectedGameId === game[0]}
                 >
                   {loadingPlayers && selectedGameId === game[0] ? (
                     <>
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
@@ -133,20 +147,21 @@ const NBA = () => {
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-400 text-lg">No games scheduled today</p>
+          <p className="text-center text-gray-400 text-lg py-12">No games scheduled today</p>
         )}
       </section>
 
       {/* Players Section */}
       {players.away && players.home && players.away.length > 0 && players.home.length > 0 && (
-        <section className="container mx-auto px-4 py-12 bg-gray-900/50" ref={ref}>
+        <section className="container mx-auto px-4 py-12 bg-gray-900/70 backdrop-blur-md" ref={ref}>
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
               Game Rosters
             </h2>
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="bg-gray-700/50 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-lg transition-all duration-300"
+              className="bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 
+                        text-white px-4 py-2 rounded-lg transition-all duration-300 shadow-md"
             >
               Back to Top
             </button>
@@ -154,22 +169,27 @@ const NBA = () => {
 
           {/* Away Team */}
           <div className="mb-12">
-            <h3 className="text-xl font-semibold mb-4 text-blue-400">Away Team</h3>
+            <h3 className="text-xl md:text-2xl font-semibold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-500">
+              Away Team
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {players.away.map((player) => (
                 <div
                   key={player.id}
-                  className="bg-gray-800/70 backdrop-blur-md rounded-xl p-5 border border-gray-700 
-                            hover:border-blue-400 transition-all duration-300 group shadow-md"
+                  className="bg-gray-800/80 backdrop-blur-md rounded-xl p-5 border border-gray-700 
+                            hover:border-blue-400 transition-all duration-300 group shadow-md hover:shadow-lg"
                 >
-                  <h4 className="text-lg font-semibold text-white mb-2">{player.name}</h4>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gray-600 rounded-full" />
+                    <h4 className="text-lg font-semibold text-white">{player.name}</h4>
+                  </div>
                   <p className="text-gray-300 text-sm mb-4">
                     {player.position} | {player.team_name} #{player.jersey_number}
                   </p>
                   <Link
                     to={`/nba/player/${player.id}`}
                     className="block w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 
-                              text-white text-center py-2 rounded-lg transition-all duration-300 group-hover:scale-105"
+                              text-white text-center py-2 rounded-lg transition-all duration-300 group-hover:scale-105 shadow-md"
                   >
                     View Profile
                   </Link>
@@ -180,22 +200,27 @@ const NBA = () => {
 
           {/* Home Team */}
           <div>
-            <h3 className="text-xl font-semibold mb-4 text-cyan-300">Home Team</h3>
+            <h3 className="text-xl md:text-2xl font-semibold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-cyan-500">
+              Home Team
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {players.home.map((player) => (
                 <div
                   key={player.id}
-                  className="bg-gray-800/70 backdrop-blur-md rounded-xl p-5 border border-gray-700 
-                            hover:border-blue-400 transition-all duration-300 group shadow-md"
+                  className="bg-gray-800/80 backdrop-blur-md rounded-xl p-5 border border-gray-700 
+                            hover:border-blue-400 transition-all duration-300 group shadow-md hover:shadow-lg"
                 >
-                  <h4 className="text-lg font-semibold text-white mb-2">{player.name}</h4>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gray-600 rounded-full" />
+                    <h4 className="text-lg font-semibold text-white">{player.name}</h4>
+                  </div>
                   <p className="text-gray-300 text-sm mb-4">
                     {player.position} | {player.team_name} #{player.jersey_number}
                   </p>
                   <Link
                     to={`/nba/player/${player.id}`}
                     className="block w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 
-                              text-white text-center py-2 rounded-lg transition-all duration-300 group-hover:scale-105"
+                              text-white text-center py-2 rounded-lg transition-all duration-300 group-hover:scale-105 shadow-md"
                   >
                     View Profile
                   </Link>

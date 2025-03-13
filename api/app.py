@@ -492,12 +492,14 @@ def games():
         gameStatus = game['gameStatusText']
         awayTeam = game['awayTeam']['teamName']
         awayId = game['awayTeam']['teamId']
+        awayScore = game['awayTeam']['score']
         homeTeam = game['homeTeam']['teamName']
         homeId = game['homeTeam']['teamId']
+        homeScore = game['homeTeam']['score']
         gameTimeUTC = game["gameTimeUTC"]
         #gameTimeLTZ = gameTimeUTC.replace(tzinfo=timezone.utc).astimezone(tz=None)
 
-        todaysGames.append([gameId, gameStatus, awayTeam, awayId, homeTeam, homeId, gameTimeUTC])
+        todaysGames.append([gameId, gameStatus, awayTeam, awayId, awayScore, homeTeam, homeId, homeScore, gameTimeUTC])
 
     return todaysGames
 
