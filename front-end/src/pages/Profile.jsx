@@ -16,7 +16,7 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  LabelList
+  LabelList,
 } from "recharts";
 
 const Profile = () => {
@@ -25,7 +25,6 @@ const Profile = () => {
     gamelogs: [],
     player_grades: [],
   });
-
   const [selectedStat, setSelectedStat] = useState("pts");
   const [xGames, setXGames] = useState(30);
   const [thresholdValue, setThresholdValue] = useState(17.5);
@@ -36,9 +35,8 @@ const Profile = () => {
   const [selectedTeammate, setSelectedTeammate] = useState(null);
   const [teammateGamelogs, setTeammateGamelogs] = useState([]);
   const [filterTeammate, setFilterTeammate] = useState(null);
-
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage] = useState(10);
 
   const { sport, playerId } = useParams();
 
@@ -64,16 +62,14 @@ const Profile = () => {
     { key: "fantasy", label: "Fantasy Score" },
   ];
 
+  // Keep all useEffect hooks unchanged
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/nba/player/${playerId}`, {
-          method: 'GET',
-            redirect: 'follow',
-            headers: {
-              'Accept': 'application/json',
-              'ngrok-skip-browser-warning': 'true' // Bypass ngrok warning
-            }
+          method: "GET",
+          redirect: "follow",
+          headers: { "Accept": "application/json", "ngrok-skip-browser-warning": "true" },
         });
         const data = await response.json();
         setProfile(data);
@@ -84,20 +80,16 @@ const Profile = () => {
     fetchData();
   }, [playerId]);
 
-  useEffect (() => {
+  useEffect(() => {
     const fetchTeammates = async () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/players`, {
-          method: 'GET',
-            redirect: 'follow',
-            headers: {
-              'Accept': 'application/json',
-              'ngrok-skip-browser-warning': 'true' // Bypass ngrok warning
-            }
+          method: "GET",
+          redirect: "follow",
+          headers: { "Accept": "application/json", "ngrok-skip-browser-warning": "true" },
         });
         const data = await response.json();
         const playerTeamId = profile.player_info[0]?.TEAM_ID;
-
         if (playerTeamId && data[playerTeamId]) {
           setTeammates(data[playerTeamId].players);
         }
@@ -105,7 +97,6 @@ const Profile = () => {
         console.error("Error fetching teammates:", error);
       }
     };
-
     fetchTeammates();
   }, [profile]);
 
@@ -114,12 +105,9 @@ const Profile = () => {
       if (!selectedTeammate) return;
       try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/${sport}/player/${selectedTeammate}`, {
-          method: 'GET',
-            redirect: 'follow',
-            headers: {
-              'Accept': 'application/json',
-              'ngrok-skip-browser-warning': 'true' // Bypass ngrok warning
-            }
+          method: "GET",
+          redirect: "follow",
+          headers: { "Accept": "application/json", "ngrok-skip-browser-warning": "true" },
         });
         const data = await response.json();
         setTeammateGamelogs(data.gamelogs);
@@ -127,28 +115,18 @@ const Profile = () => {
         console.error("Error fetching teammate gamelogs:", error);
       }
     };
-
     fetchTeammateGamelogs();
   }, [selectedTeammate]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload?.length) {
       const game = payload[0]?.payload;
-      const opponent = game?.opp;
-      const gameDate = game?.game_date; 
-  
       return (
-        <div className="bg-white p-3">
-          <span>{gameDate ? gameDate : 'Date not available'}</span>
-          <br />
-          <span>{opponent ? `vs. ${opponent}` : 'Opponent not available'}</span>
-          <br />
+        <div className="bg-gray-800 p-3 rounded-lg border border-gray-700 text-white">
+          <span>{game?.game_date || "Date not available"}</span><br />
+          <span>{game?.opp ? `vs. ${game.opp}` : "Opponent not available"}</span><br />
           {payload.map((ele, index) => (
-            <div key={index}>
-              <span className="text-secondary">
-                {ele.value} {ele.name}
-              </span>
-            </div>
+            <div key={index}><span className="text-blue-300">{ele.value} {ele.name}</span></div>
           ))}
         </div>
       );
@@ -164,409 +142,264 @@ const Profile = () => {
     { stat: "Athleticism", value: (profile.player_grades[0]?.Athleticism || 0).toFixed(1) },
   ];
 
-  const playerName =
-    profile.player_info.length > 0
-      ? profile.player_info[0].PLAYER_FULL_NAME
-      : "";
-
+  const playerName = profile.player_info.length > 0 ? profile.player_info[0].PLAYER_FULL_NAME : "";
   const lastXGames = profile.gamelogs.slice(-xGames);
-
   const vsOpponent = opponent ? profile.gamelogs.filter((game) => game.opp === opponent) : profile.gamelogs;
-
   const reversedTableGames = [...profile.gamelogs].reverse();
-
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
   const currentRows = reversedTableGames.slice(indexOfFirstRow, indexOfLastRow);
-
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
-    <>
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Bio Section */}
-        <div className="text-white p-6 rounded-2xl">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-            {/* Player Image */}
-            {profile.player_info[0]?.PLAYER_IMAGE && (
-              <div className="flex-shrink-0 relative">
-                <img
-                  src={profile.player_info[0].PLAYER_IMAGE}
-                  alt={profile.player_info[0].PLAYER_FULL_NAME}
-                  className="w-32 h-32 rounded-full border-4 border-gradient-to-r from-blue-500 to-purple-500 object-cover transform hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-md -z-10 animate-pulse"></div>
-              </div>
-            )}
-            
-            {/* Player Info */}
-            <div className="flex-1">
-              <h1 className="text-3xl md:text-4xl font-extrabold mb-4 text-center md:text-left bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                {playerName}
-              </h1>
-              
-              {/* Basic Info Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                <div className="flex items-center">
-                  <span className="font-semibold text-blue-300 mr-2">Team:</span> 
-                  <span className="text-gray-100">{profile.player_info[0]?.TEAM_FULL_NAME || "N/A"}</span>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+      <div className="container mx-auto px-4 py-8">
+        {/* Bio and Radar Section */}
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              {profile.player_info[0]?.PLAYER_IMAGE && (
+                <div className="relative flex-shrink-0">
+                  <img
+                    src={profile.player_info[0].PLAYER_IMAGE}
+                    alt={playerName}
+                    className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-blue-500 object-cover transition-transform duration-300 hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-md -z-10 animate-pulse" />
                 </div>
-                <div className="flex items-center">
-                  <span className="font-semibold text-blue-300 mr-2">Position:</span> 
-                  <span className="text-gray-100">{profile.player_info[0]?.POSITION || "N/A"}</span>
+              )}
+              <div className="flex-1 text-center sm:text-left">
+                <h1 className="text-3xl md:text-4xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+                  {playerName}
+                </h1>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                  <p><span className="font-semibold text-blue-300">Team:</span> {profile.player_info[0]?.TEAM_FULL_NAME || "N/A"}</p>
+                  <p><span className="font-semibold text-blue-300">Position:</span> {profile.player_info[0]?.POSITION || "N/A"}</p>
+                  <p><span className="font-semibold text-blue-300">Height:</span> {profile.player_info[0]?.HEIGHT || "N/A"}</p>
+                  <p><span className="font-semibold text-blue-300">Weight:</span> {profile.player_info[0]?.WEIGHT || "N/A"}</p>
+                  {profile.player_info[0]?.DRAFT_YEAR !== 0 && (
+                    <p><span className="font-semibold text-blue-300">Draft:</span> {profile.player_info[0]?.DRAFT_YEAR} Round {profile.player_info[0]?.DRAFT_ROUND} Pick {profile.player_info[0]?.DRAFT_NUMBER}</p>
+                  )}
                 </div>
-                <div className="flex items-center">
-                  <span className="font-semibold text-blue-300 mr-2">Height:</span> 
-                  <span className="text-gray-100">{profile.player_info[0]?.HEIGHT || "N/A"}</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-semibold text-blue-300 mr-2">Weight:</span> 
-                  <span className="text-gray-100">{profile.player_info[0]?.WEIGHT || "N/A"}</span>
-                </div>
-                {profile.player_info[0]?.DRAFT_YEAR !== 0 ? <div className="flex items-center">
-                  <span className="font-semibold text-blue-300 mr-2">Draft:</span> 
-                  <span className="text-gray-100">{profile.player_info[0]?.DRAFT_YEAR || "N/A"} Round {profile.player_info[0]?.DRAFT_ROUND || "N/A"} Pick {profile.player_info[0]?.DRAFT_NUMBER || "N/A"}</span>
-                </div> : <></>}
-              </div>
-
-              {/* Stats Grid */}
-              <h2 className="text-lg font-semibold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Season Averages
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-                <div className="relative p-2 rounded-lg hover:bg-blue-500/10 transition-colors">
-                  <span className="font-semibold text-blue-300">PTS:</span> 
-                  <span className="ml-1 text-white">{profile.player_grades[0]?.PTS || "N/A"}</span>
-                  <div className="absolute inset-0 border border-blue-500/20 rounded-lg pointer-events-none"></div>
-                </div>
-                <div className="relative p-2 rounded-lg hover:bg-blue-500/10 transition-colors">
-                  <span className="font-semibold text-blue-300">REB:</span> 
-                  <span className="ml-1 text-white">{profile.player_grades[0]?.REB || "N/A"}</span>
-                  <div className="absolute inset-0 border border-blue-500/20 rounded-lg pointer-events-none"></div>
-                </div>
-                <div className="relative p-2 rounded-lg hover:bg-blue-500/10 transition-colors">
-                  <span className="font-semibold text-blue-300">AST:</span> 
-                  <span className="ml-1 text-white">{profile.player_grades[0]?.AST || "N/A"}</span>
-                  <div className="absolute inset-0 border border-blue-500/20 rounded-lg pointer-events-none"></div>
-                </div>
-                <div className="relative p-2 rounded-lg hover:bg-blue-500/10 transition-colors">
-                  <span className="font-semibold text-blue-300">BLK:</span> 
-                  <span className="ml-1 text-white">{profile.player_grades[0]?.BLK || "N/A"}</span>
-                  <div className="absolute inset-0 border border-blue-500/20 rounded-lg pointer-events-none"></div>
-                </div>
-                <div className="relative p-2 rounded-lg hover:bg-blue-500/10 transition-colors">
-                  <span className="font-semibold text-blue-300">STL:</span> 
-                  <span className="ml-1 text-white">{profile.player_grades[0]?.STL || "N/A"}</span>
-                  <div className="absolute inset-0 border border-blue-500/20 rounded-lg pointer-events-none"></div>
-                </div>
-                <div className="relative p-2 rounded-lg hover:bg-blue-500/10 transition-colors">
-                  <span className="font-semibold text-blue-300">TOV:</span> 
-                  <span className="ml-1 text-white">{profile.player_grades[0]?.TOV || "N/A"}</span>
-                  <div className="absolute inset-0 border border-blue-500/20 rounded-lg pointer-events-none"></div>
+                <h2 className="text-lg font-semibold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+                  Season Averages
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {["PTS", "REB", "AST", "BLK", "STL", "TOV"].map(stat => (
+                    <div key={stat} className="p-2 rounded-lg bg-gray-700/30 hover:bg-blue-500/20 transition-colors">
+                      <span className="font-semibold text-blue-300">{stat}:</span> {profile.player_grades[0]?.[stat] || "N/A"}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
-        </div>
+          {profile.player_grades[0] && (
+            <div className="backdrop-blur-sm rounded-xl p-6 flex items-center justify-center">
+              <ResponsiveContainer width="100%" height={350}>
+                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                  <PolarGrid stroke="#4B5563" />
+                  <PolarAngleAxis dataKey="stat" tick={{ fill: "#fff", fontSize: 14 }} />
+                  <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} />
+                  <Radar name={playerName} dataKey="value" stroke="#00A8E8" strokeWidth={2} fill="#00A8E8" fillOpacity={0.4}>
+                    <LabelList
+                      dataKey="value"
+                      position="outside"
+                      content={({ x, y, value }) => {
+                        const color = value <= 45 ? "#FF4242" : value >= 65 && value < 80 ? "#35E16F" : value >= 80 ? "#4D66FF" : "#FFC822";
+                        return (
+                          <>
+                            <rect x={x - 18} y={y - 12} width={36} height={24} fill={color} rx={5} />
+                            <text x={x} y={y} fill="white" fontSize={14} textAnchor="middle" alignmentBaseline="middle">{value}</text>
+                          </>
+                        );
+                      }}
+                    />
+                  </Radar>
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </section>
 
-        {/* Radar Chart Section */}
-        {profile.player_grades[0] ? (
-          <div className="flex justify-center items-center">
-            <ResponsiveContainer width="100%" height={400}>
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                <PolarGrid />
-                <PolarAngleAxis dataKey="stat" tick={{ fill: "white" }} />
-                <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false}/>
-                <Radar name={playerName} dataKey="value" stroke="#007ea7" strokeWidth={2} fill="#007ea7" fillOpacity={0.4}>
-                  <LabelList
-                    dataKey="value"
-                    position="outside"
-                    content={({ x, y, value }) => {
-                      const color = value <= 45 ? "#ff4242" : value >= 65 && value < 80 ? "#35e16f" : value >= 80 ? "#4D66FF" : "#ffc822";
-                      const padding = 3;
-
-                      return (
-                        <>
-                          {/* Background rectangle */}
-                          <rect
-                            x={x - 18 - padding} // Position the rect with some padding around the text
-                            y={y - 9 - padding}
-                            width={36 + padding * 2}  // Width based on the text length
-                            height={18 + padding * 2} // Height based on the text size
-                            fill={color}
-                            rx={5}
-                          />
-                          
-                          {/* Text inside the rectangle */}
-                          <text x={x} y={y} fill="white" fontSize={16} textAnchor="middle" alignmentBaseline="middle">
-                            {value}
-                          </text>
-                        </>
-                      );
-                    }}
-                    fontSize={16}
-                    angle={0}
-                  />
-                </Radar>
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-        ) : ( <></> )}
-      </div>
-                
-        {/* Chart Section */}
-        <div className="w-full">
-          <ResponsiveContainer width="100%" height={500}>
-          <BarChart
-            data={profile.gamelogs
-              .filter((game) => {
-                const isOpponentMatch = !opponent || game.opp === opponent;
-                const isMinutesMatch = !minutes || game.mins_played >= minutes;
-                const isWinLossMatch = !winLoss || game.outcome === winLoss;
-                const isTeammateMatch = filterTeammate
-                  ? filterTeammate === 'with'
-                    ? teammateGamelogs.some(teammateGame => teammateGame.game_id === game.game_id)
-                    : !teammateGamelogs.some(teammateGame => teammateGame.game_id === game.game_id)
-                  : true;
-        
-                return isOpponentMatch && isMinutesMatch && isWinLossMatch && isTeammateMatch;
-              })
-              .slice(-xGames)
-            }
-            margin={{ top: 0, right: 50, left: 0, bottom: 5 }}
-          >
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip content={<CustomTooltip active={false} payload={[]} label={""} opponent={opponent} />} />
-              <Bar dataKey={selectedStat} radius={20}>
-                {profile.gamelogs.filter((game) => {
-                  const isOpponentMatch = !opponent || game.opp === opponent;
-                  const isMinutesMatch = !minutes || game.mins_played >= minutes;
-                  const isWinLossMatch = !winLoss || game.outcome === winLoss;
-                  const isTeammateMatch = filterTeammate
-                    ? filterTeammate === 'with'
-                      ? teammateGamelogs.some(teammateGame => teammateGame.game_id === game.game_id)
-                      : !teammateGamelogs.some(teammateGame => teammateGame.game_id === game.game_id)
-                    : true;
-          
-                  return isOpponentMatch && isMinutesMatch && isWinLossMatch && isTeammateMatch;
-                })
-                .slice(-xGames).map((entry, index) => (
-                  <Cell
-                    key={index}
-                    fill={
-                      entry[selectedStat] < thresholdValue ? "#FF4747" : entry[selectedStat] > thresholdValue ? "#00DF4C" : "#8C8C89"
-                    }
-                  />
+        {/* Filters and Chart Section */}
+        <section className="mb-12">
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <input
+                type="number"
+                step="0.5"
+                value={thresholdValue}
+                onChange={(e) => setThresholdValue(parseFloat(e.target.value))}
+                className="bg-gray-700/50 border border-gray-600 rounded-lg p-2 text-center focus:border-blue-500 focus:outline-none"
+                placeholder="Threshold"
+              />
+              <select
+                value={xGames}
+                onChange={(e) => setXGames(Number(e.target.value))}
+                className="bg-gray-700/50 border border-gray-600 rounded-lg p-2 focus:border-blue-500 focus:outline-none"
+              >
+                <option value="all">Season</option>
+                {[30, 20, 15, 10, 5].map(n => <option key={n} value={n}>{n} games</option>)}
+              </select>
+              <select
+                value={opponent || ""}
+                onChange={(e) => setOpponent(e.target.value || null)}
+                className="bg-gray-700/50 border border-gray-600 rounded-lg p-2 focus:border-blue-500 focus:outline-none"
+              >
+                <option value="">All Opponents</option>
+                {["ATL", "BKN", "BOS", "CHA", "CHI", "CLE", "DAL", "DEN", "DET", "GSW", "HOU", "IND", "LAC", "LAL", "MEM", "MIA", "MIL", "MIN", "NOP", "NYK", "OKC", "ORL", "PHI", "PHX", "POR", "SAS", "SAC", "TOR", "UTA", "WAS"].map(team => (
+                  <option key={team} value={team}>{team}</option>
                 ))}
-              </Bar>
-              <ReferenceLine y={thresholdValue} stroke="white" />
-              <Line type="monotone" dataKey="thresholdLine" stroke="#000000" dot={false} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4">
-          {/* Stat Category Buttons */}
-          <div className="flex flex-wrap justify-center gap-2">
+              </select>
+              <select
+                value={minutes || ""}
+                onChange={(e) => setMinutes(e.target.value ? Number(e.target.value) : null)}
+                className="bg-gray-700/50 border border-gray-600 rounded-lg p-2 focus:border-blue-500 focus:outline-none"
+              >
+                <option value="">All Minutes</option>
+                {[10, 20, 25, 28, 30, 32, 34, 40].map(m => <option key={m} value={m}>{m}+ Minutes</option>)}
+              </select>
+              <select
+                value={winLoss || ""}
+                onChange={(e) => setWinLoss(e.target.value || null)}
+                className="bg-gray-700/50 border border-gray-600 rounded-lg p-2 focus:border-blue-500 focus:outline-none"
+              >
+                <option value="">All Games</option>
+                <option value="W">Wins Only</option>
+                <option value="L">Losses Only</option>
+              </select>
+              <select
+                value={selectedTeammate || ""}
+                onChange={(e) => setSelectedTeammate(e.target.value || null)}
+                className="bg-gray-700/50 border border-gray-600 rounded-lg p-2 focus:border-blue-500 focus:outline-none"
+              >
+                <option value="">Select Teammate</option>
+                {teammates.map((teammate) => (
+                  <option key={teammate.player_id} value={teammate.player_id}>{teammate.player_name}</option>
+                ))}
+              </select>
+              {selectedTeammate && (
+                <select
+                  value={filterTeammate || ""}
+                  onChange={(e) => setFilterTeammate(e.target.value || null)}
+                  className="bg-gray-700/50 border border-gray-600 rounded-lg p-2 focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="">All Games</option>
+                  <option value="with">With Teammate</option>
+                  <option value="without">Without Teammate</option>
+                </select>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2 mb-6">
             {statCategories.map((stat) => (
               <button
                 key={stat.key}
-                className={`px-3 py-1 rounded-lg font-medium text-white ${
-                  selectedStat === stat.key ? "bg-[#007ea7]" : "bg-gray-700"
-                }`}
                 onClick={() => setSelectedStat(stat.key)}
+                className={`px-3 py-1 rounded-lg font-medium transition-all duration-200 ${
+                  selectedStat === stat.key
+                    ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white"
+                    : "bg-gray-700/50 text-gray-300 hover:bg-gray-600"
+                }`}
               >
                 {stat.label}
               </button>
             ))}
           </div>
-        </div>
-
-        {/* Filter Controls */}
-        <div className="grid md:grid-cols-6 gap-3">
-          <input
-            className="rounded-2xl bg-[#007ea7] text-white p-1 text-center mx-3 my-1"
-            type="number"
-            step="0.5"
-            id="thresholdValue"
-            value={thresholdValue}
-            onChange={(e) => setThresholdValue(parseFloat(e.target.value, 10))}
-          />
-          <select
-            className="rounded-2xl bg-[#007ea7] text-white text-center p-1 mx-3 my-1"
-            id="xGames"
-            onChange={(e) => setXGames(Number(e.target.value))}
-            value={xGames}
-          >
-            <option value="all">Season</option>
-            <option value={30}>30 games</option>
-            <option value={20}>20 games</option>
-            <option value={15}>15 games</option>
-            <option value={10}>10 games</option>
-            <option value={5}>5 games</option>
-          </select> 
-          <select
-            className="rounded-2xl bg-[#007ea7] text-white p-1 mx-3 my-1 text-center"
-            id="opponent"
-            onChange={(e) => setOpponent(e.target.value)}
-            value={opponent}
-          >
-            <option value="">All Opponents</option>
-            <option value="ATL">ATL</option>
-            <option value="BKN">BKN</option>
-            <option value="BOS">BOS</option>
-            <option value="CHA">CHA</option>
-            <option value="CHI">CHI</option>
-            <option value="CLE">CLE</option>
-            <option value="DAL">DAL</option>
-            <option value="DEN">DEN</option>
-            <option value="DET">DET</option>
-            <option value="GSW">GSW</option>
-            <option value="HOU">HOU</option>
-            <option value="IND">IND</option>
-            <option value="LAC">LAC</option>
-            <option value="LAL">LAL</option>
-            <option value="MEM">MEM</option>
-            <option value="MIA">MIA</option>
-            <option value="MIL">MIL</option>
-            <option value="MIN">MIN</option>
-            <option value="NOP">NOP</option>
-            <option value="NYK">NYK</option>
-            <option value="OKC">OKC</option>
-            <option value="ORL">ORL</option>
-            <option value="PHI">PHI</option>
-            <option value="PHX">PHX</option>
-            <option value="POR">POR</option>
-            <option value="SAS">SAS</option>
-            <option value="SAC">SAC</option>
-            <option value="TOR">TOR</option>
-            <option value="UTA">UTA</option>
-            <option value="WAS">WAS</option>
-          </select>
-          <select
-            className="rounded-2xl bg-[#007ea7] text-white p-1 mx-3 my-1 text-center"
-            id="minutesPlayed"
-            onChange={(e) => setMinutes(e.target.value ? Number(e.target.value) : null)}
-            value={minutes}
-          >
-            <option value="">All Minutes</option>
-            <option value="10">10+ Minutes</option>
-            <option value="20">20+ Minutes</option>
-            <option value="25">24+ Minutes</option>
-            <option value="28">28+ Minutes</option>
-            <option value="30">30+ Minutes</option>
-            <option value="32">32+ Minutes</option>
-            <option value="34">34+ Minutes</option>
-            <option value="40">40+ Minutes</option>
-          </select>
-          <select
-            className="rounded-2xl bg-[#007ea7] text-white p-1 mx-3 my-1 text-center"
-            id="winLoss"
-            onChange={(e) => setWinLoss(e.target.value || null)}
-            value={winLoss || ""}
-          >
-            <option value="">All Games</option>
-            <option value="W">Wins Only</option>
-            <option value="L">Losses Only</option>
-          </select>
-          <select
-            className="rounded-2xl bg-[#007ea7] text-white p-1 mx-3 my-1 text-center"
-            id="selectedTeammate"
-            onChange={(e) => setSelectedTeammate(e.target.value)}
-            value={selectedTeammate || ""}
-          >
-            <option value="">Select a teammate</option>
-            {teammates.map((teammate) => (
-              <option key={teammate.player_id} value={teammate.player_id}>
-                {teammate.player_name}
-              </option>
-            ))}
-          </select>
-
-          {selectedTeammate && (
-            <>
-              <select
-                className="rounded-2xl bg-[#007ea7] text-white p-1 mx-3 my-1 text-center"
-                id="filterTeammate"
-                onChange={(e) => setFilterTeammate(e.target.value)}
-                value={filterTeammate || ""}
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={profile.gamelogs
+                  .filter((game) => {
+                    const isOpponentMatch = !opponent || game.opp === opponent;
+                    const isMinutesMatch = !minutes || game.mins_played >= minutes;
+                    const isWinLossMatch = !winLoss || game.outcome === winLoss;
+                    const isTeammateMatch = filterTeammate
+                      ? filterTeammate === "with"
+                        ? teammateGamelogs.some(tg => tg.game_id === game.game_id)
+                        : !teammateGamelogs.some(tg => tg.game_id === game.game_id)
+                      : true;
+                    return isOpponentMatch && isMinutesMatch && isWinLossMatch && isTeammateMatch;
+                  })
+                  .slice(-xGames)}
+                margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
               >
-                <option value="">All games</option>
-                <option value="with">With selected teammate</option>
-                <option value="without">Without selected teammate</option>
-              </select>
-            </>
-          )}
-        </div>
+                <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
+                <XAxis dataKey="game_date" stroke="#fff" tick={{ fontSize: 12 }} />
+                <YAxis stroke="#fff" tick={{ fontSize: 12 }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey={selectedStat} radius={[8, 8, 0, 0]}>
+                  {lastXGames.map((entry, index) => (
+                    <Cell
+                      key={index}
+                      fill={entry[selectedStat] < thresholdValue ? "#FF4747" : entry[selectedStat] > thresholdValue ? "#00DF4C" : "#8C8C89"}
+                    />
+                  ))}
+                </Bar>
+                <ReferenceLine y={thresholdValue} stroke="#fff" strokeDasharray="5 5" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
 
-        {/* Game Log Section */}
-        <div className="mt-6 text-white">
-          <h2 className="text-xl md:text-2xl mb-4">All Gamelogs</h2>
+        {/* Game Logs Section */}
+        <section className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+          <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+            Game Logs
+          </h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs md:text-sm text-left">
-              <thead className="bg-gray-800">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-700/50">
                 <tr>
-                  <th className="p-2">Date</th>
-                  <th className="p-2">Matchup</th>
-                  <th className="p-2">W/L</th>
-                  <th className="p-2">Mins</th>
-                  <th className="p-2">FG</th>
-                  <th className="p-2">FG%</th>
-                  <th className="p-2">3PT</th>
-                  <th className="p-2">3PT%</th>
-                  <th className="p-2">FT</th>
-                  <th className="p-2">FT%</th>
-                  <th className="p-2">Reb</th>
-                  <th className="p-2">Ast</th>
-                  <th className="p-2">Blk</th>
-                  <th className="p-2">Stl</th>
-                  <th className="p-2">PF</th>
-                  <th className="p-2">Pts</th>
+                  {["Date", "Matchup", "W/L", "Mins", "FG", "FG%", "3PT", "3PT%", "FT", "FT%", "Reb", "Ast", "Blk", "Stl", "PF", "Pts"].map((header) => (
+                    <th key={header} className="p-3 font-semibold">{header}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {currentRows.map((game, index) => (
-                  <tr key={index} className="border-b border-gray-700">
-                    <td className="p-2">{game.game_date}</td>
-                    <td className="p-2">{game.matchup}</td>
-                    <td className="p-2">{game.outcome}</td>
-                    <td className="p-2">{game.mins_played}</td>
-                    <td className="p-2">{game.fg_made}-{game.fg_att}</td>
-                    <td className="p-2">{`${Math.round(game.fg_pct * 10000) / 100}%`}</td>
-                    <td className="p-2">{game.fg3_made}-{game.fg3_att}</td>
-                    <td className="p-2">{`${Math.round(game.fg3_pct * 10000) / 100}%`}</td>
-                    <td className="p-2">{game.ft_made}-{game.ft_att}</td>
-                    <td className="p-2">{`${Math.round(game.ft_pct * 10000) / 100}%`}</td>
-                    <td className="p-2">{game.reb}</td>
-                    <td className="p-2">{game.ast}</td>
-                    <td className="p-2">{game.blk}</td>
-                    <td className="p-2">{game.stl}</td>
-                    <td className="p-2">{game.foul}</td>
-                    <td className="p-2">{game.pts}</td>
+                  <tr key={index} className="border-t border-gray-700 hover:bg-gray-700/30 transition-colors">
+                    <td className="p-3">{game.game_date}</td>
+                    <td className="p-3">{game.matchup}</td>
+                    <td className="p-3">{game.outcome}</td>
+                    <td className="p-3">{game.mins_played}</td>
+                    <td className="p-3">{game.fg_made}-{game.fg_att}</td>
+                    <td className="p-3">{`${Math.round(game.fg_pct * 10000) / 100}%`}</td>
+                    <td className="p-3">{game.fg3_made}-{game.fg3_att}</td>
+                    <td className="p-3">{`${Math.round(game.fg3_pct * 10000) / 100}%`}</td>
+                    <td className="p-3">{game.ft_made}-{game.ft_att}</td>
+                    <td className="p-3">{`${Math.round(game.ft_pct * 10000) / 100}%`}</td>
+                    <td className="p-3">{game.reb}</td>
+                    <td className="p-3">{game.ast}</td>
+                    <td className="p-3">{game.blk}</td>
+                    <td className="p-3">{game.stl}</td>
+                    <td className="p-3">{game.foul}</td>
+                    <td className="p-3">{game.pts}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <div className="flex justify-center gap-4 mt-4">
+          <div className="flex justify-center gap-4 mt-6">
             <button
-              className="bg-[#007ea7] w-20 rounded-md text-sm py-2 text-white disabled:opacity-50"
               onClick={() => paginate(currentPage - 1)}
               disabled={currentPage === 1}
+              className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 rounded-lg disabled:opacity-50 hover:from-blue-700 hover:to-cyan-600 transition-all"
             >
               Previous
             </button>
             <button
-              className="bg-[#007ea7] w-20 rounded-md text-sm py-2 text-white disabled:opacity-50"
               onClick={() => paginate(currentPage + 1)}
               disabled={indexOfLastRow >= profile.gamelogs.length}
+              className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 rounded-lg disabled:opacity-50 hover:from-blue-700 hover:to-cyan-600 transition-all"
             >
               Next
             </button>
           </div>
-        </div>
-    </>
+        </section>
+      </div>
+    </div>
   );
 };
 

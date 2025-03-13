@@ -14,21 +14,23 @@ import Home from './pages/Home'
 import NBA from './pages/NBA';
 import Players from './pages/Players';
 import Profile from './pages/Profile'
-import Header from './components/Header';
 import Teams from './pages/Teams';
+import Navbar from './components/Navbar';
 
 const App = () => {
   return (
     <div>
-      <Header/>
       <Router>
-        <Routes>
-          <Route exact path ='/' Component={Home}/>
-          <Route path='/nba/games' Component={NBA}/>
-          <Route path='/nba/teams' element={<Teams/>}/>
-          <Route path='/nba/players' Component={Players}/>
-          <Route path="/:sport/player/:playerId" Component={Profile}/>
-        </Routes>
+        <Navbar/>
+        <div className='pt-16'>
+          <Routes>
+            <Route exact path ='/' Component={Home}/>
+            <Route path='/games' Component={NBA}/>
+            <Route path='/teams' element={<Teams/>}/>
+            <Route path='/players' Component={Players}/>
+            <Route path="/:sport/player/:playerId" Component={Profile}/>
+          </Routes>
+        </div>
       </Router>
     </div>
   )

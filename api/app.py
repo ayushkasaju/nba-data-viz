@@ -489,14 +489,15 @@ def games():
 
     for game in games:
         gameId = game['gameId']
+        gameStatus = game['gameStatusText']
         awayTeam = game['awayTeam']['teamName']
         awayId = game['awayTeam']['teamId']
         homeTeam = game['homeTeam']['teamName']
         homeId = game['homeTeam']['teamId']
-        #gameTimeUTC = parser.parse(game["gameTimeUTC"])
+        gameTimeUTC = game["gameTimeUTC"]
         #gameTimeLTZ = gameTimeUTC.replace(tzinfo=timezone.utc).astimezone(tz=None)
 
-        todaysGames.append([gameId, awayTeam, awayId, homeTeam, homeId])
+        todaysGames.append([gameId, gameStatus, awayTeam, awayId, homeTeam, homeId, gameTimeUTC])
 
     return todaysGames
 
@@ -528,7 +529,6 @@ def teams():
         teams_dict[team_id] = {'team_name': team_name, 'city': city, 'arena': arena, 'owner': owner, 'general_manager': generalmanager, 'head_coach': headcoach, 'conference': conference, 'record': record, 'playoff_rank': playoffrank}
     return jsonify(teams_dict)
     
-
 @app.route('/games/<gameId>')
 def gamePlayers(gameId):
     game_info = next((game for game in games() if game[0] == gameId), None)
