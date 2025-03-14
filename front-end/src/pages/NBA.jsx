@@ -56,8 +56,12 @@ const NBA = () => {
     return game[1];
   };
 
+  const getGameStatusText = (game) => {
+    return game[2];
+  };
+
   const getGameTime = (game) => {
-    const date = new Date(game[8]);
+    const date = new Date(game[9]);
     return date.toLocaleString("en-US", {
       weekday: "short",
       month: "short",
@@ -69,9 +73,13 @@ const NBA = () => {
   };
 
   const getTeamScores = (game) => {
-    const awayScore = game[4] ?? "N/A";
-    const homeScore = game[7] ?? "N/A";
+    const awayScore = game[5] ?? "";
+    const homeScore = game[8] ?? "";
     return `${awayScore} - ${homeScore}`;
+  };
+
+  const isGameLive = (game) => {
+    return getGameStatus(game) === 2;
   };
 
   return (
@@ -102,47 +110,65 @@ const NBA = () => {
                 key={game[0]}
                 className={`group bg-gray-800/70 backdrop-blur-md rounded-xl p-6 border 
                           ${selectedGameId === game[0] ? "border-cyan-400" : "border-gray-700"} 
-                          hover:border-blue-500 transition-all duration-300 transform hover:-translate-y-2 shadow-xl hover:shadow-2xl`}
+                          hover:border-blue-500 transition-all duration-300 transform hover:-translate-y-2 shadow-xl hover:shadow-2xl
+                          flex flex-col min-h-[250px]`}
               >
-                <div className="flex justify-between items-center mb-4">
+                <div className="grid grid-cols-2 gap-2 items-center mb-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full" /> {/* Away team logo placeholder */}
-                    <h2 className="text-l font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
-                      {game[2]} @ {game[5]}
+                    {/* <div className="w-8 h-8 bg-gray-600 rounded-full flex-shrink-0" /> */}
+                    <h2
+                      className={`text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300 ${
+                        isGameLive(game) ? "truncate" : ""
+                      }`}
+                    >
+                      {game[3]} @ {game[6]}
                     </h2>
-                    <div className="w-8 h-8 bg-gray-600 rounded-full" /> {/* Home team logo placeholder */}
                   </div>
-                  <span className="text-sm text-gray-400 bg-gray-700/50 px-2 py-1 rounded-full">
-                    {getGameStatus(game)}
-                  </span>
+                  <div className="flex items-center justify-end gap-2">
+                    {isGameLive(game) && (
+                      <span className="flex items-center gap-1 text-sm text-red-400 bg-red-900/50 px-2 py-1 rounded-full flex-shrink-0">
+                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                        Live
+                      </span>
+                    )}
+                    <span
+                      className={`text-sm text-gray-400 bg-gray-700/50 px-2 py-1 rounded-full ${
+                        isGameLive(game) ? "truncate" : ""
+                      }`}
+                    >
+                      {getGameStatusText(game)}
+                    </span>
+                  </div>
                 </div>
-                <div className="text-center mb-6">
+                <div className="text-center flex-grow">
                   <p className="text-gray-300 text-sm mb-2">{getGameTime(game)}</p>
-                  {getGameStatus(game).includes("Final") && (
-                    <p className="text-xl font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                  {getGameStatus(game) !== 1 && getTeamScores(game) !== " - " && (
+                    <p className="text-2xl font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                       {getTeamScores(game)}
                     </p>
                   )}
                 </div>
-                <button
-                  onClick={() => handlePlayers(game[0])}
-                  className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 
-                            text-white font-medium py-3 rounded-lg transition-all duration-300 transform group-hover:scale-105 
-                            flex items-center justify-center gap-2 shadow-md"
-                  disabled={loadingPlayers && selectedGameId === game[0]}
-                >
-                  {loadingPlayers && selectedGameId === game[0] ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                      Loading...
-                    </>
-                  ) : (
-                    "View Players"
-                  )}
-                </button>
+                <div className="mt-auto">
+                  <button
+                    onClick={() => handlePlayers(game[0])}
+                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 
+                              text-white font-medium py-3 rounded-lg transition-all duration-300 transform group-hover:scale-105 
+                              flex items-center justify-center gap-2 shadow-md"
+                    disabled={loadingPlayers && selectedGameId === game[0]}
+                  >
+                    {loadingPlayers && selectedGameId === game[0] ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Loading...
+                      </>
+                    ) : (
+                      "View Players"
+                    )}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
