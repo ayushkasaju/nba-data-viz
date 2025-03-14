@@ -538,7 +538,7 @@ def gamePlayers(gameId):
     if game_info is None:
         return "Game not found", 404
 
-    gameId, awayTeam, awayId, homeTeam, homeId = game_info
+    gameId, gameStatus, gameStatusText, awayTeam, awayId, awayScore, homeTeam, homeId, homeScore, gameTimeUTC = game_info
 
     away_players = pd.read_sql(f"SELECT Player_ID, PLAYER_FULL_NAME, POSITION, TEAM_NAME, JERSEY_NUMBER FROM players WHERE Team_Id = {awayId}", con=db)
     home_players = pd.read_sql(f"SELECT Player_ID, PLAYER_FULL_NAME, POSITION, TEAM_NAME, JERSEY_NUMBER FROM players WHERE Team_Id = {homeId}", con=db)

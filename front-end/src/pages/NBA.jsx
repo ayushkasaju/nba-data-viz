@@ -191,7 +191,7 @@ const NBA = () => {
 
       {/* Players Section */}
       {players.away && players.home && players.away.length > 0 && players.home.length > 0 && (
-        <section className="container mx-auto px-4 py-12 bg-gray-900/70 backdrop-blur-md" ref={ref}>
+        <section className="container mx-auto px-4 py-12 backdrop-blur-md" ref={ref}>
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
               Game Rosters
