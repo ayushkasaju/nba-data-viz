@@ -16,6 +16,7 @@ import Players from './pages/Players';
 import Profile from './pages/Profile'
 import Teams from './pages/Teams';
 import Navbar from './components/Navbar';
+import TeamProfile from './pages/TeamProfile';
 
 const App = () => {
   return (
@@ -27,6 +28,7 @@ const App = () => {
             <Route exact path ='/' Component={Home}/>
             <Route path='/games' Component={NBA}/>
             <Route path='/teams' element={<Teams/>}/>
+            <Route path='/team/:teamId' element={<TeamProfile/>}/>
             <Route path='/players' Component={Players}/>
             <Route path="/:sport/player/:playerId" Component={Profile}/>
           </Routes>

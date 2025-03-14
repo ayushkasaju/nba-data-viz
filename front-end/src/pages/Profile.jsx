@@ -309,7 +309,7 @@ const Profile = () => {
           </div>
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
             <ResponsiveContainer width="100%" height={400}>
-              <BarChart
+            <BarChart
                 data={profile.gamelogs
                   .filter((game) => {
                     const isOpponentMatch = !opponent || game.opp === opponent;
@@ -330,12 +330,31 @@ const Profile = () => {
                 <YAxis stroke="#fff" tick={{ fontSize: 12 }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey={selectedStat} radius={[8, 8, 0, 0]}>
-                  {lastXGames.map((entry, index) => (
-                    <Cell
-                      key={index}
-                      fill={entry[selectedStat] < thresholdValue ? "#FF4747" : entry[selectedStat] > thresholdValue ? "#00DF4C" : "#8C8C89"}
-                    />
-                  ))}
+                  {profile.gamelogs
+                    .filter((game) => {
+                      const isOpponentMatch = !opponent || game.opp === opponent;
+                      const isMinutesMatch = !minutes || game.mins_played >= minutes;
+                      const isWinLossMatch = !winLoss || game.outcome === winLoss;
+                      const isTeammateMatch = filterTeammate
+                        ? filterTeammate === "with"
+                          ? teammateGamelogs.some(tg => tg.game_id === game.game_id)
+                          : !teammateGamelogs.some(tg => tg.game_id === game.game_id)
+                        : true;
+                      return isOpponentMatch && isMinutesMatch && isWinLossMatch && isTeammateMatch;
+                    })
+                    .slice(-xGames)
+                    .map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={
+                          entry[selectedStat] < thresholdValue
+                            ? "#FF4747" // Red for below threshold
+                            : entry[selectedStat] > thresholdValue
+                            ? "#00DF4C" // Green for above threshold
+                            : "#8C8C89" // Gray for at threshold
+                        }
+                      />
+                    ))}
                 </Bar>
                 <ReferenceLine y={thresholdValue} stroke="#fff" strokeDasharray="5 5" />
               </BarChart>
