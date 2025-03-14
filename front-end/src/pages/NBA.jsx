@@ -57,7 +57,19 @@ const NBA = () => {
   };
 
   const getGameStatusText = (game) => {
-    return game[2];
+    const statusText = game[2];
+    if (getGameStatus(game) === 1 && /\d{1,2}:\d{2}\s[ap]m\sET/i.test(statusText)) {
+      // Use the full timestamp from game[9] which should be the actual start time
+      const gameDate = new Date(game[9]);
+      
+      // Convert to user's local time
+      return gameDate.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    }
+    return statusText;
   };
 
   const getGameTime = (game) => {
@@ -111,7 +123,7 @@ const NBA = () => {
                 className={`group bg-gray-800/70 backdrop-blur-md rounded-xl p-6 border 
                           ${selectedGameId === game[0] ? "border-cyan-400" : "border-gray-700"} 
                           hover:border-blue-500 transition-all duration-300 transform hover:-translate-y-2 shadow-xl hover:shadow-2xl
-                          flex flex-col min-h-[250px]`}
+                          flex flex-col`}
               >
                 <div className="grid grid-cols-2 gap-2 items-center mb-4">
                   <div className="flex items-center gap-2">
@@ -141,7 +153,7 @@ const NBA = () => {
                   </div>
                 </div>
                 <div className="text-center flex-grow">
-                  <p className="text-gray-300 text-sm mb-2">{getGameTime(game)}</p>
+                  {/* <p className="text-gray-300 text-sm mb-2">{getGameTime(game)}</p> */}
                   {getGameStatus(game) !== 1 && getTeamScores(game) !== " - " && (
                     <p className="text-2xl font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                       {getTeamScores(game)}
@@ -152,7 +164,7 @@ const NBA = () => {
                   <button
                     onClick={() => handlePlayers(game[0])}
                     className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 
-                              text-white font-medium py-3 rounded-lg transition-all duration-300 transform group-hover:scale-105 
+                              text-white font-medium py-3 mt-4 rounded-lg transition-all duration-300 transform group-hover:scale-105 
                               flex items-center justify-center gap-2 shadow-md"
                     disabled={loadingPlayers && selectedGameId === game[0]}
                   >
