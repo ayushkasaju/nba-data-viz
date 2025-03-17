@@ -158,12 +158,13 @@ const Profile = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload?.length) {
       const game = payload[0]?.payload;
+      const statLabel = statCategories.find(stat => stat.key === selectedStat)?.label || selectedStat;
       return (
         <div className="bg-gray-800 p-2 sm:p-3 rounded-lg border border-gray-700 text-white text-xs sm:text-sm">
           <span>{game?.game_date || "Date not available"}</span><br />
           <span>{game?.opp ? `vs. ${game.opp}` : "Opponent not available"}</span><br />
           {payload.map((ele, index) => (
-            <div key={index}><span className="text-blue-300">{ele.value} {ele.name}</span></div>
+            <div key={index}><span className="text-blue-300">{ele.value} {statLabel}</span></div>
           ))}
         </div>
       );
@@ -216,6 +217,25 @@ const Profile = () => {
     setRadarPlayers(radarPlayers.filter(id => id !== playerId));
   };
 
+  // Calculate threshold stats
+  const filteredGames = profile.gamelogs
+    .filter((game) => {
+      const isOpponentMatch = !opponent || game.opp === opponent;
+      const isMinutesMatch = !minutes || game.mins_played >= minutes;
+      const isWinLossMatch = !winLoss || game.outcome === winLoss;
+      const isTeammateMatch = filterTeammate
+        ? filterTeammate === "with"
+          ? teammateGamelogs.some(tg => tg.game_id === game.game_id)
+          : !teammateGamelogs.some(tg => tg.game_id === game.game_id)
+        : true;
+      return isOpponentMatch && isMinutesMatch && isWinLossMatch && isTeammateMatch;
+    })
+    .slice(-xGames);
+
+  const gamesOverThreshold = filteredGames.filter(game => game[selectedStat] > thresholdValue).length;
+  const totalGames = filteredGames.length;
+  const percentageOver = totalGames > 0 ? ((gamesOverThreshold / totalGames) * 100).toFixed(1) : 0;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
       <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8">
@@ -266,7 +286,7 @@ const Profile = () => {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Compare players..."
+                  placeholder="Search NBA players..."
                   className="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-2 text-sm focus:border-blue-500 focus:outline-none"
                 />
                 {searchTerm && (
@@ -309,6 +329,11 @@ const Profile = () => {
                 >
                   <PolarGrid stroke="#4B5563" />
                   <PolarAngleAxis dataKey="stat" tick={{ fill: "#fff", fontSize: 12 }} />
+                  <PolarRadiusAxis 
+                    angle={90} 
+                    domain={[0, 100]} 
+                    tick={radarPlayers.length > 0 ? { fill: "#fff", fontSize: 10 } : false} 
+                  />
                   <Radar 
                     name={playerName} 
                     dataKey={playerId} 
@@ -349,7 +374,6 @@ const Profile = () => {
                   })}
                 </RadarChart>
               </ResponsiveContainer>
-              {/* Legend Table for Comparisons */}
               {radarPlayers.length > 0 && (
                 <div className="mt-4 w-full max-w-md">
                   <table className="w-full text-xs sm:text-sm text-left">
@@ -482,19 +506,7 @@ const Profile = () => {
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-gray-700">
             <ResponsiveContainer width="100%" height={300} className="min-w-[300px]">
               <BarChart
-                data={profile.gamelogs
-                  .filter((game) => {
-                    const isOpponentMatch = !opponent || game.opp === opponent;
-                    const isMinutesMatch = !minutes || game.mins_played >= minutes;
-                    const isWinLossMatch = !winLoss || game.outcome === winLoss;
-                    const isTeammateMatch = filterTeammate
-                      ? filterTeammate === "with"
-                        ? teammateGamelogs.some(tg => tg.game_id === game.game_id)
-                        : !teammateGamelogs.some(tg => tg.game_id === game.game_id)
-                      : true;
-                    return isOpponentMatch && isMinutesMatch && isWinLossMatch && isTeammateMatch;
-                  })
-                  .slice(-xGames)}
+                data={filteredGames}
                 margin={{ top: 15, right: 20, left: -10, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
@@ -502,35 +514,25 @@ const Profile = () => {
                 <YAxis stroke="#fff" tick={{ fontSize: 10 }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey={selectedStat} radius={[6, 6, 0, 0]}>
-                  {profile.gamelogs
-                    .filter((game) => {
-                      const isOpponentMatch = !opponent || game.opp === opponent;
-                      const isMinutesMatch = !minutes || game.mins_played >= minutes;
-                      const isWinLossMatch = !winLoss || game.outcome === winLoss;
-                      const isTeammateMatch = filterTeammate
-                        ? filterTeammate === "with"
-                          ? teammateGamelogs.some(tg => tg.game_id === game.game_id)
-                          : !teammateGamelogs.some(tg => tg.game_id === game.game_id)
-                        : true;
-                      return isOpponentMatch && isMinutesMatch && isWinLossMatch && isTeammateMatch;
-                    })
-                    .slice(-xGames)
-                    .map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={
-                          entry[selectedStat] < thresholdValue
-                            ? "#FF4747"
-                            : entry[selectedStat] > thresholdValue
-                            ? "#00DF4C"
-                            : "#8C8C89"
-                        }
-                      />
-                    ))}
+                  {filteredGames.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={
+                        entry[selectedStat] < thresholdValue
+                          ? "#FF4747"
+                          : entry[selectedStat] > thresholdValue
+                          ? "#00DF4C"
+                          : "#8C8C89"
+                      }
+                    />
+                  ))}
                 </Bar>
                 <ReferenceLine y={thresholdValue} stroke="#fff" strokeDasharray="5 5" />
               </BarChart>
             </ResponsiveContainer>
+            <div className="text-center mt-2 text-sm text-gray-300">
+              Over {thresholdValue} {statCategories.find(stat => stat.key === selectedStat)?.label || selectedStat} in {gamesOverThreshold} of {totalGames} games ({percentageOver}%)
+            </div>
           </div>
         </section>
 
