@@ -286,7 +286,7 @@ const Profile = () => {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search NBA players..."
+                  placeholder="Compare players..."
                   className="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-2 text-sm focus:border-blue-500 focus:outline-none"
                 />
                 {searchTerm && (
@@ -329,11 +329,6 @@ const Profile = () => {
                 >
                   <PolarGrid stroke="#4B5563" />
                   <PolarAngleAxis dataKey="stat" tick={{ fill: "#fff", fontSize: 12 }} />
-                  <PolarRadiusAxis 
-                    angle={90} 
-                    domain={[0, 100]} 
-                    tick={radarPlayers.length > 0 ? { fill: "#fff", fontSize: 10 } : false} 
-                  />
                   <Radar 
                     name={playerName} 
                     dataKey={playerId} 
