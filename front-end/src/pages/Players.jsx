@@ -50,45 +50,61 @@ const Players = () => {
     return nameParts[nameParts.length - 1];
   };
 
+  // Flatten players from all teams into a single array and add team_name
   const filteredPlayers = Object.keys(players)
-    .map((teamId) => {
-      if (teamId !== "0") {
-        const team = players[teamId];
-        const filteredTeamPlayers = team.players
-          .filter((player) =>
-            player.player_name.toLowerCase().includes(search.toLowerCase())
-          )
-          .sort((a, b) => {
-            if (sortBy === "last_name") {
-              const lastNameA = getLastName(a.player_name);
-              const lastNameB = getLastName(b.player_name);
-              return sortOrder === "asc"
-                ? lastNameA.localeCompare(lastNameB)
-                : lastNameB.localeCompare(lastNameA);
-            } else if (sortBy === "position") {
-              return sortOrder === "asc"
-                ? a.position.localeCompare(b.position)
-                : b.position.localeCompare(a.position);
-            } else if (sortBy === "jersey_number") {
-              return sortOrder === "asc"
-                ? a.jersey_number - b.jersey_number
-                : b.jersey_number - a.jersey_number;
-            } else if (sortBy === "scoring_grade") {
-              return sortOrder === "asc"
-                ? (a.scoring_grade || 0) - (b.scoring_grade || 0)
-                : (b.scoring_grade || 0) - (a.scoring_grade || 0);
-            }
-            return 0;
-          });
-        return { ...team, players: filteredTeamPlayers };
-      }
-      return null;
+    .filter(teamId => teamId !== "0")
+    .flatMap(teamId => {
+      const team = players[teamId];
+      return team.players.map(player => ({
+        ...player,
+        team_name: team.team_name
+      }));
     })
-    .filter((team) => team && team.players.length > 0);
+    .filter(player => 
+      player.player_name.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (sortBy === "last_name") {
+        const lastNameA = getLastName(a.player_name);
+        const lastNameB = getLastName(b.player_name);
+        return sortOrder === "asc"
+          ? lastNameA.localeCompare(lastNameB)
+          : lastNameB.localeCompare(lastNameA);
+      } else if (sortBy === "position") {
+        return sortOrder === "asc"
+          ? a.position.localeCompare(b.position)
+          : b.position.localeCompare(a.position);
+      } else if (sortBy === "jersey_number") {
+        return sortOrder === "asc"
+          ? a.jersey_number - b.jersey_number
+          : b.jersey_number - a.jersey_number;
+      } else if (sortBy === "scoring_grade") {
+        return sortOrder === "asc"
+          ? (a.scoring_grade || 0) - (b.scoring_grade || 0)
+          : (b.scoring_grade || 0) - (a.scoring_grade || 0);
+      } else if (sortBy === "playmaking_grade") {
+        return sortOrder === "asc"
+          ? (a.playmaking_grade || 0) - (b.playmaking_grade || 0)
+          : (b.playmaking_grade || 0) - (a.playmaking_grade || 0);
+      } else if (sortBy === "rebounding_grade") {
+        return sortOrder === "asc"
+          ? (a.rebounding_grade || 0) - (b.rebounding_grade || 0)
+          : (b.rebounding_grade || 0) - (a.rebounding_grade || 0);
+      } else if (sortBy === "defense_grade") {
+        return sortOrder === "asc"
+          ? (a.defense_grade || 0) - (b.defense_grade || 0)
+          : (b.defense_grade || 0) - (a.defense_grade || 0);
+      } else if (sortBy === "athleticism_grade") {
+        return sortOrder === "asc"
+          ? (a.athleticism_grade || 0) - (b.athleticism_grade || 0)
+          : (b.athleticism_grade || 0) - (a.athleticism_grade || 0);
+      }
+      return 0;
+    });
 
-  const renderGridView = (team) => (
+  const renderGridView = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {team.players.map((player) => (
+      {filteredPlayers.map((player) => (
         <div
           key={player.player_id}
           className="bg-gray-800/70 backdrop-blur-md rounded-xl p-5 border border-gray-700 
@@ -99,7 +115,7 @@ const Players = () => {
             <h3 className="text-lg font-semibold text-white">{player.player_name}</h3>
           </div>
           <p className="text-gray-300 text-sm mb-4">
-            {player.position} | {team.team_name} #{player.jersey_number}
+            {player.position} | {player.team_name} #{player.jersey_number}
           </p>
           <Link
             to={`/nba/player/${player.player_id}`}
@@ -113,7 +129,7 @@ const Players = () => {
     </div>
   );
 
-  const renderTableView = (team) => (
+  const renderTableView = () => (
     <div className="overflow-x-auto bg-gray-800/70 backdrop-blur-md rounded-xl border border-gray-700 shadow-lg">
       <table className="w-full text-white">
         <thead>
@@ -136,21 +152,44 @@ const Players = () => {
             >
               Jersey # {sortBy === "jersey_number" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
+            <th className="py-3 px-6 text-left font-semibold">
+              Team
+            </th>
             <th
               className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-cyan-300 transition-colors"
               onClick={() => handleSort("scoring_grade")}
             >
               Scoring {sortBy === "scoring_grade" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
-            <th className="py-3 px-6 text-left font-semibold">Playmaking</th>
-            <th className="py-3 px-6 text-left font-semibold">Rebounding</th>
-            <th className="py-3 px-6 text-left font-semibold">Defense</th>
-            <th className="py-3 px-6 text-left font-semibold">Athleticism</th>
+            <th 
+              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-cyan-300 transition-colors"
+              onClick={() => handleSort("playmaking_grade")}
+            >
+              Playmaking {sortBy === "playmaking_grade" && (sortOrder === "asc" ? "↑" : "↓")}
+            </th>
+            <th 
+              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-cyan-300 transition-colors"
+              onClick={() => handleSort("rebounding_grade")}
+            >
+              Rebounding {sortBy === "rebounding_grade" && (sortOrder === "asc" ? "↑" : "↓")}
+            </th>
+            <th 
+              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-cyan-300 transition-colors"
+              onClick={() => handleSort("defense_grade")}
+            >
+              Defense {sortBy === "defense_grade" && (sortOrder === "asc" ? "↑" : "↓")}
+            </th>
+            <th 
+              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-cyan-300 transition-colors"
+              onClick={() => handleSort("athleticism_grade")}
+            >
+              Athleticism {sortBy === "athleticism_grade" && (sortOrder === "asc" ? "↑" : "↓")}
+            </th>
             <th className="py-3 px-6 text-left font-semibold">Action</th>
           </tr>
         </thead>
         <tbody>
-          {team.players.map((player, index) => (
+          {filteredPlayers.map((player, index) => (
             <tr
               key={player.player_id}
               className={`border-t border-gray-700 hover:bg-gray-700/50 transition-all duration-200 ${
@@ -163,6 +202,7 @@ const Players = () => {
               </td>
               <td className="py-4 px-6">{player.position}</td>
               <td className="py-4 px-6">{player.jersey_number}</td>
+              <td className="py-4 px-6">{player.team_name}</td>
               <td className="py-4 px-6">{player.scoring_grade?.toFixed(1) || '-'}</td>
               <td className="py-4 px-6">{player.playmaking_grade?.toFixed(1) || '-'}</td>
               <td className="py-4 px-6">{player.rebounding_grade?.toFixed(1) || '-'}</td>
@@ -240,18 +280,8 @@ const Players = () => {
           </div>
         ) : filteredPlayers.length > 0 ? (
           <div className="space-y-12">
-            {filteredPlayers.map((team) => (
-              <div key={team.teamId}>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
-                    {team.team_name}
-                  </h2>
-                  <span className="text-sm text-gray-300">{team.players.length} Players</span>
-                </div>
-                {viewMode === "grid" && renderGridView(team)}
-                {viewMode === "table" && renderTableView(team)}
-              </div>
-            ))}
+            {viewMode === "grid" && renderGridView()}
+            {viewMode === "table" && renderTableView()}
           </div>
         ) : (
           <p className="text-center text-gray-400 text-lg py-12">No player data available</p>
