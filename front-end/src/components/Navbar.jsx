@@ -31,7 +31,7 @@ const Navbar = () => {
               }`
             }
           >
-            Today
+            Games
           </NavLink>
           <NavLink
             to="/teams"
@@ -98,7 +98,7 @@ const Navbar = () => {
               }
               onClick={toggleMenu}
             >
-              Today
+              Games
             </NavLink>
             <NavLink
               to="/teams"

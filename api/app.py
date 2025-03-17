@@ -506,14 +506,36 @@ def games():
 
 @app.route('/players')
 def players():
-    players_db = pd.read_sql("SELECT TEAM_ID, TEAM_FULL_NAME, PLAYER_ID, PLAYER_FULL_NAME, POSITION, TEAM_NAME, JERSEY_NUMBER FROM players", con=db)
+    query = """SELECT 
+            p.TEAM_ID, 
+            p.TEAM_FULL_NAME, 
+            p.PLAYER_ID, 
+            p.PLAYER_FULL_NAME, 
+            p.POSITION, 
+            p.TEAM_NAME, 
+            p.JERSEY_NUMBER,
+            g.PTS, 
+            g.REB, 
+            g.AST, 
+            g.STL, 
+            g.BLK, 
+            g.TOV, 
+            g.Scoring, 
+            g.Playmaking, 
+            g.Rebounding, 
+            g.Defense, 
+            g.Athleticism
+        FROM players p
+        LEFT JOIN grades g ON p.PLAYER_ID = g.PLAYER_ID
+    """
+    players_db = pd.read_sql(query, con=db)
 
     players_dict = {}
     for index, row in players_db.iterrows():
-        team_id, team_name, player_id, player_name, position, team, jersey_number  = row
+        team_id, team_name, player_id, player_name, position, team, jersey_number, points, rebounds, assists, steals, blocks, turnovers, scoring_grade, playmaking_grade, rebounding_grade, defense_grade, athleticism_grade  = row
         if team_id not in players_dict:
             players_dict[team_id] = {'team_name': team_name, 'players': []}
-        players_dict[team_id]['players'].append({'player_id': player_id, 'player_name': player_name, 'position': position, 'team': team, 'jersey_number': jersey_number})
+        players_dict[team_id]['players'].append({'player_id': player_id, 'player_name': player_name, 'position': position, 'team': team, 'jersey_number': jersey_number, 'points': points, 'rebounds': rebounds, 'assists': assists, 'steals': steals, 'blocks': blocks, 'turnovers': turnovers, 'scoring_grade': scoring_grade, 'playmaking_grade': playmaking_grade, 'rebounding_grade': rebounding_grade, 'defense_grade': defense_grade, 'athleticism_grade': athleticism_grade})
 
     return jsonify(players_dict)
 

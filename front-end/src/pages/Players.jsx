@@ -6,7 +6,7 @@ const Players = () => {
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState("grid");
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState("last_name"); // Changed default to "last_name"
+  const [sortBy, setSortBy] = useState("last_name");
   const [sortOrder, setSortOrder] = useState("asc");
 
   useEffect(() => {
@@ -45,7 +45,6 @@ const Players = () => {
     }
   };
 
-  // Function to extract last name from full name
   const getLastName = (fullName) => {
     const nameParts = fullName.trim().split(" ");
     return nameParts[nameParts.length - 1];
@@ -74,6 +73,10 @@ const Players = () => {
               return sortOrder === "asc"
                 ? a.jersey_number - b.jersey_number
                 : b.jersey_number - a.jersey_number;
+            } else if (sortBy === "scoring_grade") {
+              return sortOrder === "asc"
+                ? (a.scoring_grade || 0) - (b.scoring_grade || 0)
+                : (b.scoring_grade || 0) - (a.scoring_grade || 0);
             }
             return 0;
           });
@@ -117,7 +120,7 @@ const Players = () => {
           <tr className="bg-gray-700/50">
             <th
               className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-cyan-300 transition-colors"
-              onClick={() => handleSort("last_name")} // Changed to "last_name"
+              onClick={() => handleSort("last_name")}
             >
               Player {sortBy === "last_name" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
@@ -133,6 +136,16 @@ const Players = () => {
             >
               Jersey # {sortBy === "jersey_number" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
+            <th
+              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-cyan-300 transition-colors"
+              onClick={() => handleSort("scoring_grade")}
+            >
+              Scoring {sortBy === "scoring_grade" && (sortOrder === "asc" ? "↑" : "↓")}
+            </th>
+            <th className="py-3 px-6 text-left font-semibold">Playmaking</th>
+            <th className="py-3 px-6 text-left font-semibold">Rebounding</th>
+            <th className="py-3 px-6 text-left font-semibold">Defense</th>
+            <th className="py-3 px-6 text-left font-semibold">Athleticism</th>
             <th className="py-3 px-6 text-left font-semibold">Action</th>
           </tr>
         </thead>
@@ -150,6 +163,11 @@ const Players = () => {
               </td>
               <td className="py-4 px-6">{player.position}</td>
               <td className="py-4 px-6">{player.jersey_number}</td>
+              <td className="py-4 px-6">{player.scoring_grade || '-'}</td>
+              <td className="py-4 px-6">{player.playmaking_grade || '-'}</td>
+              <td className="py-4 px-6">{player.rebounding_grade || '-'}</td>
+              <td className="py-4 px-6">{player.defense_grade || '-'}</td>
+              <td className="py-4 px-6">{player.athleticism_grade || '-'}</td>
               <td className="py-4 px-6">
                 <Link
                   to={`/nba/player/${player.player_id}`}
