@@ -92,23 +92,23 @@ const Players = () => {
           ? a.jersey_number - b.jersey_number
           : b.jersey_number - a.jersey_number;
       } else if (sortBy === "scoring_grade") {
-        return sortOrder === "asc"
+        return sortOrder === "desc"
           ? (a.scoring_grade || 0) - (b.scoring_grade || 0)
           : (b.scoring_grade || 0) - (a.scoring_grade || 0);
       } else if (sortBy === "playmaking_grade") {
-        return sortOrder === "asc"
+        return sortOrder === "desc"
           ? (a.playmaking_grade || 0) - (b.playmaking_grade || 0)
           : (b.playmaking_grade || 0) - (a.playmaking_grade || 0);
       } else if (sortBy === "rebounding_grade") {
-        return sortOrder === "asc"
+        return sortOrder === "desc"
           ? (a.rebounding_grade || 0) - (b.rebounding_grade || 0)
           : (b.rebounding_grade || 0) - (a.rebounding_grade || 0);
       } else if (sortBy === "defense_grade") {
-        return sortOrder === "asc"
+        return sortOrder === "desc"
           ? (a.defense_grade || 0) - (b.defense_grade || 0)
           : (b.defense_grade || 0) - (a.defense_grade || 0);
       } else if (sortBy === "athleticism_grade") {
-        return sortOrder === "asc"
+        return sortOrder === "desc"
           ? (a.athleticism_grade || 0) - (b.athleticism_grade || 0)
           : (b.athleticism_grade || 0) - (a.athleticism_grade || 0);
       }
