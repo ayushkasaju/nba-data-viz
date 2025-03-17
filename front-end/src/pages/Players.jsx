@@ -163,11 +163,11 @@ const Players = () => {
               </td>
               <td className="py-4 px-6">{player.position}</td>
               <td className="py-4 px-6">{player.jersey_number}</td>
-              <td className="py-4 px-6">{player.scoring_grade || '-'}</td>
-              <td className="py-4 px-6">{player.playmaking_grade || '-'}</td>
-              <td className="py-4 px-6">{player.rebounding_grade || '-'}</td>
-              <td className="py-4 px-6">{player.defense_grade || '-'}</td>
-              <td className="py-4 px-6">{player.athleticism_grade || '-'}</td>
+              <td className="py-4 px-6">{player.scoring_grade?.toFixed(1) || '-'}</td>
+              <td className="py-4 px-6">{player.playmaking_grade?.toFixed(1) || '-'}</td>
+              <td className="py-4 px-6">{player.rebounding_grade?.toFixed(1) || '-'}</td>
+              <td className="py-4 px-6">{player.defense_grade?.toFixed(1) || '-'}</td>
+              <td className="py-4 px-6">{player.athleticism_grade?.toFixed(1) || '-'}</td>
               <td className="py-4 px-6">
                 <Link
                   to={`/nba/player/${player.player_id}`}

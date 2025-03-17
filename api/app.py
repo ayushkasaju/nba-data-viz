@@ -20,6 +20,7 @@ from sklearn.preprocessing import MinMaxScaler
 import requests
 from requests.exceptions import Timeout
 import random
+from math import isnan
 
 import sqlalchemy
 import os
@@ -529,13 +530,15 @@ def players():
         LEFT JOIN grades g ON p.PLAYER_ID = g.PLAYER_ID
     """
     players_db = pd.read_sql(query, con=db)
-    
-    # Replace NaN with None in the entire DataFrame
-    players_db = players_db.where(pd.notnull(players_db), None)
 
     players_dict = {}
     for index, row in players_db.iterrows():
         team_id, team_name, player_id, player_name, position, team, jersey_number, points, rebounds, assists, steals, blocks, turnovers, scoring_grade, playmaking_grade, rebounding_grade, defense_grade, athleticism_grade = row
+        
+        # Helper function to replace NaN with None
+        def sanitize_value(value):
+            return None if isinstance(value, float) and isnan(value) else value
+
         if team_id not in players_dict:
             players_dict[team_id] = {'team_name': team_name, 'players': []}
         players_dict[team_id]['players'].append({
@@ -544,17 +547,17 @@ def players():
             'position': position, 
             'team': team, 
             'jersey_number': jersey_number, 
-            'points': points, 
-            'rebounds': rebounds, 
-            'assists': assists, 
-            'steals': steals, 
-            'blocks': blocks, 
-            'turnovers': turnovers, 
-            'scoring_grade': scoring_grade, 
-            'playmaking_grade': playmaking_grade, 
-            'rebounding_grade': rebounding_grade, 
-            'defense_grade': defense_grade, 
-            'athleticism_grade': athleticism_grade
+            'points': sanitize_value(points), 
+            'rebounds': sanitize_value(rebounds), 
+            'assists': sanitize_value(assists), 
+            'steals': sanitize_value(steals), 
+            'blocks': sanitize_value(blocks), 
+            'turnovers': sanitize_value(turnovers), 
+            'scoring_grade': sanitize_value(scoring_grade), 
+            'playmaking_grade': sanitize_value(playmaking_grade), 
+            'rebounding_grade': sanitize_value(rebounding_grade), 
+            'defense_grade': sanitize_value(defense_grade), 
+            'athleticism_grade': sanitize_value(athleticism_grade)
         })
 
     return jsonify(players_dict)
