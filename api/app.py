@@ -3,6 +3,7 @@ from flask_cors import CORS
 import pandas as pd
 import time
 from apscheduler.schedulers.background import BackgroundScheduler
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from nba_api.stats.endpoints import playergamelog
 from nba_api.stats.endpoints import playerindex
@@ -15,7 +16,8 @@ from nba_api.stats.endpoints import leaguehustlestatsplayer
 from nba_api.stats.endpoints import leagueplayerondetails
 from nba_api.stats.endpoints import playerdashboardbyshootingsplits
 
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, RobustScaler
+from sklearn.cluster import KMeans
 
 import requests
 from requests.exceptions import Timeout
@@ -253,47 +255,22 @@ def fetchStandings():
 def fetchGrades():
     table = "grades"
 
-
+    # Fetch and clean base stats
     player_base = leaguedashplayerstats.LeagueDashPlayerStats(measure_type_detailed_defense='Base', per_mode_detailed='PerGame')
     player_base_df = player_base.get_data_frames()[0]
-    player_base_df = player_base_df.drop(columns=['AGE', 'W', 'L', 'W_PCT', 'FGM', 'FG_PCT', 'FG3A', 'FG3M', 'FG3_PCT', 'FTM', 'FT_PCT', 'BLKA', 'PFD', "PLUS_MINUS", "NBA_FANTASY_PTS", "DD2", "TD3", "WNBA_FANTASY_PTS", "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK", "FGM_RANK", "FGA_RANK", "FG_PCT_RANK", "FG3M_RANK", "FG3A_RANK", "FG3_PCT_RANK", "FTM_RANK", "FTA_RANK", "FT_PCT_RANK", "OREB_RANK", "DREB_RANK", "REB_RANK", "AST_RANK", "TOV_RANK", "STL_RANK", "BLK_RANK", "BLKA_RANK", "PF_RANK", "PFD_RANK", "PTS_RANK", "PLUS_MINUS_RANK", "NBA_FANTASY_PTS_RANK", "DD2_RANK", "TD3_RANK", "WNBA_FANTASY_PTS_RANK"],axis=1)
+    player_base_df = player_base_df.drop(columns=['AGE', 'W', 'L', 'W_PCT', 'FGM', 'FG_PCT', 'FG3A', 'FG3M', 'FG3_PCT', 'FTM', 'FT_PCT', 'BLKA', 'PFD', "PLUS_MINUS", "NBA_FANTASY_PTS", "DD2", "TD3", "WNBA_FANTASY_PTS", "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK", "FGM_RANK", "FGA_RANK", "FG_PCT_RANK", "FG3M_RANK", "FG3A_RANK", "FG3_PCT_RANK", "FTM_RANK", "FTA_RANK", "FT_PCT_RANK", "OREB_RANK", "DREB_RANK", "REB_RANK", "AST_RANK", "TOV_RANK", "STL_RANK", "BLK_RANK", "BLKA_RANK", "PF_RANK", "PFD_RANK", "PTS_RANK", "PLUS_MINUS_RANK", "NBA_FANTASY_PTS_RANK", "DD2_RANK", "TD3_RANK", "WNBA_FANTASY_PTS_RANK"], axis=1)
 
+    # Fetch and clean advanced stats
     player_adv = leaguedashplayerstats.LeagueDashPlayerStats(measure_type_detailed_defense='Advanced', per_mode_detailed='PerGame')
     player_adv_df = player_adv.get_data_frames()[0]
-    player_adv_df = player_adv_df.drop(columns=[
-        "AGE", "W", "L", "W_PCT", "E_OFF_RATING", "OFF_RATING", "sp_work_OFF_RATING",
-        "E_DEF_RATING", "DEF_RATING", "sp_work_DEF_RATING", "E_NET_RATING", "NET_RATING", "sp_work_NET_RATING",
-        "AST_PCT", "AST_TO", "AST_RATIO", "OREB_PCT", "DREB_PCT", "REB_PCT", "TM_TOV_PCT", "E_TOV_PCT",
-        "E_USG_PCT", "E_PACE", "PACE", "PACE_PER40", "sp_work_PACE", "PIE", "POSS", "FGM", "FGA",
-        "FGM_PG", "FGA_PG", "FG_PCT", "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK",
-        "E_OFF_RATING_RANK", "OFF_RATING_RANK", "sp_work_OFF_RATING_RANK", "E_DEF_RATING_RANK",
-        "DEF_RATING_RANK", "sp_work_DEF_RATING_RANK", "E_NET_RATING_RANK", "NET_RATING_RANK",
-        "sp_work_NET_RATING_RANK", "AST_PCT_RANK", "AST_TO_RANK", "AST_RATIO_RANK",
-        "OREB_PCT_RANK", "DREB_PCT_RANK", "REB_PCT_RANK", "TM_TOV_PCT_RANK", "E_TOV_PCT_RANK",
-        "EFG_PCT_RANK", "TS_PCT_RANK", "USG_PCT_RANK", "E_USG_PCT_RANK", "E_PACE_RANK",
-        "PACE_RANK", "sp_work_PACE_RANK", "PIE_RANK", "FGM_RANK", "FGA_RANK",
-        "FGM_PG_RANK", "FGA_PG_RANK", "FG_PCT_RANK",'PLAYER_NAME', 
-        'NICKNAME', 
-        'TEAM_ID', 
-        'TEAM_ABBREVIATION', 
-        'GP', 
-        'MIN'])
-    
+    player_adv_df = player_adv_df.drop(columns=["AGE", "W", "L", "W_PCT", "E_OFF_RATING", "OFF_RATING", "sp_work_OFF_RATING", "E_DEF_RATING", "DEF_RATING", "sp_work_DEF_RATING", "E_NET_RATING", "NET_RATING", "sp_work_NET_RATING", "AST_PCT", "AST_TO", "AST_RATIO", "OREB_PCT", "DREB_PCT", "REB_PCT", "TM_TOV_PCT", "E_TOV_PCT", "E_USG_PCT", "E_PACE", "PACE", "PACE_PER40", "sp_work_PACE", "PIE", "POSS", "FGM", "FGA", "FGM_PG", "FGA_PG", "FG_PCT", "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK", "E_OFF_RATING_RANK", "OFF_RATING_RANK", "sp_work_OFF_RATING_RANK", "E_DEF_RATING_RANK", "DEF_RATING_RANK", "sp_work_DEF_RATING_RANK", "E_NET_RATING_RANK", "NET_RATING_RANK", "sp_work_NET_RATING_RANK", "AST_PCT_RANK", "AST_TO_RANK", "AST_RATIO_RANK", "OREB_PCT_RANK", "DREB_PCT_RANK", "REB_PCT_RANK", "TM_TOV_PCT_RANK", "E_TOV_PCT_RANK", "EFG_PCT_RANK", "TS_PCT_RANK", "USG_PCT_RANK", "E_USG_PCT_RANK", "E_PACE_RANK", "PACE_RANK", "sp_work_PACE_RANK", "PIE_RANK", "FGM_RANK", "FGA_RANK", "FGM_PG_RANK", "FGA_PG_RANK", "FG_PCT_RANK", 'PLAYER_NAME', 'NICKNAME', 'TEAM_ID', 'TEAM_ABBREVIATION', 'GP', 'MIN'])
+
+    # Fetch and clean misc stats
     player_misc = leaguedashplayerstats.LeagueDashPlayerStats(measure_type_detailed_defense='Misc', per_mode_detailed='PerGame')
     player_misc_df = player_misc.get_data_frames()[0]
-    player_misc_df = player_misc_df.drop(columns=["AGE", "W", "L", "W_PCT", "PTS_OFF_TOV", "PTS_2ND_CHANCE", "PTS_PAINT",
-        "OPP_PTS_OFF_TOV", "OPP_PTS_2ND_CHANCE", "OPP_PTS_FB", "OPP_PTS_PAINT",
-        "BLK", "BLKA", "PF", "PFD", "NBA_FANTASY_PTS",
-        "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK",
-        "PTS_OFF_TOV_RANK", "PTS_2ND_CHANCE_RANK", "PTS_FB_RANK", "PTS_PAINT_RANK",
-        "OPP_PTS_OFF_TOV_RANK", "OPP_PTS_2ND_CHANCE_RANK", "OPP_PTS_FB_RANK", "OPP_PTS_PAINT_RANK",
-        "BLK_RANK", "BLKA_RANK", "PF_RANK", "PFD_RANK", "NBA_FANTASY_PTS_RANK",'PLAYER_NAME', 
-        'NICKNAME', 
-        'TEAM_ID', 
-        'TEAM_ABBREVIATION', 
-        'GP', 
-        'MIN'])
+    player_misc_df = player_misc_df.drop(columns=["AGE", "W", "L", "W_PCT", "PTS_OFF_TOV", "PTS_2ND_CHANCE", "PTS_PAINT", "OPP_PTS_OFF_TOV", "OPP_PTS_2ND_CHANCE", "OPP_PTS_FB", "OPP_PTS_PAINT", "BLK", "BLKA", "PF", "PFD", "NBA_FANTASY_PTS", "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK", "PTS_OFF_TOV_RANK", "PTS_2ND_CHANCE_RANK", "PTS_FB_RANK", "PTS_PAINT_RANK", "OPP_PTS_OFF_TOV_RANK", "OPP_PTS_2ND_CHANCE_RANK", "OPP_PTS_FB_RANK", "OPP_PTS_PAINT_RANK", "BLK_RANK", "BLKA_RANK", "PF_RANK", "PFD_RANK", "NBA_FANTASY_PTS_RANK", 'PLAYER_NAME', 'NICKNAME', 'TEAM_ID', 'TEAM_ABBREVIATION', 'GP', 'MIN'])
 
+    # Fetch opponent stats by team
     team_ids = player_base_df['TEAM_ID'].unique()
     player_opp_df = []
     for id in team_ids:
@@ -301,183 +278,299 @@ def fetchGrades():
         p_opp_df = player_opp.get_data_frames()[0]
         player_opp_df.append(p_opp_df)
         time.sleep(1)
-    player_opp_df = pd.concat(player_opp_df, ignore_index=True)
-    player_opp_df = player_opp_df.drop(columns=["GROUP_SET", "COURT_STATUS", "W", "L", "W_PCT", "OPP_FGM", "OPP_FGA", "OPP_FG3M", "OPP_FG3A",
-        "OPP_FTM", "OPP_FTA", "OPP_FT_PCT", "OPP_OREB", "OPP_DREB", "OPP_REB", "OPP_AST", "OPP_TOV",
-        "OPP_STL", "OPP_BLK", "OPP_BLKA", "OPP_PF", "OPP_PFD", "OPP_PTS", "PLUS_MINUS",
-        "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK", "OPP_FGM_RANK", "OPP_FGA_RANK",
-        "OPP_FG_PCT_RANK", "OPP_FG3M_RANK", "OPP_FG3A_RANK", "OPP_FG3_PCT_RANK", "OPP_FTM_RANK",
-        "OPP_FTA_RANK", "OPP_FT_PCT_RANK", "OPP_OREB_RANK", "OPP_DREB_RANK", "OPP_REB_RANK",
-        "OPP_AST_RANK", "OPP_TOV_RANK", "OPP_STL_RANK", "OPP_BLK_RANK", "OPP_BLKA_RANK", "OPP_PF_RANK",
-        "OPP_PFD_RANK", "OPP_PTS_RANK", "PLUS_MINUS_RANK", 'TEAM_NAME', 'VS_PLAYER_NAME',
-        'TEAM_ID', 
-        'TEAM_ABBREVIATION', 
-        'GP', 
-        'MIN'])
-    player_opp_df.rename(columns={'VS_PLAYER_ID':'PLAYER_ID'}, inplace=True)
 
+    # Concatenate all dataframes
+    player_opp_df = pd.concat(player_opp_df, ignore_index=True)
+
+    # Group by PLAYER_ID and aggregate the statistics
+    player_opp_df = player_opp_df.groupby('VS_PLAYER_ID').agg({
+        'OPP_FG_PCT': 'mean',    # Use mean for percentage stats
+        'OPP_FG3_PCT': 'mean',
+        # Add other percentage or rate stats you want to keep as means
+    }).reset_index()
+
+    # Rename the column to match your expected output
+    player_opp_df.rename(columns={'VS_PLAYER_ID': 'PLAYER_ID'}, inplace=True)
+
+    # Drop unwanted columns (adjust this list based on what you actually need)
+    columns_to_drop = ["GROUP_SET", "COURT_STATUS", "W", "L", "W_PCT", "OPP_FGM", "OPP_FGA", 
+                    "OPP_FG3M", "OPP_FG3A", "OPP_FTM", "OPP_FTA", "OPP_FT_PCT", 
+                    "OPP_OREB", "OPP_DREB", "OPP_REB", "OPP_AST", "OPP_TOV", 
+                    "OPP_STL", "OPP_BLK", "OPP_BLKA", "OPP_PF", "OPP_PFD", 
+                    "OPP_PTS", "PLUS_MINUS", "GP_RANK", "W_RANK", "L_RANK", 
+                    "W_PCT_RANK", "MIN_RANK", "OPP_FGM_RANK", "OPP_FGA_RANK", 
+                    "OPP_FG_PCT_RANK", "OPP_FG3M_RANK", "OPP_FG3A_RANK", 
+                    "OPP_FG3_PCT_RANK", "OPP_FTM_RANK", "OPP_FTA_RANK", 
+                    "OPP_FT_PCT_RANK", "OPP_OREB_RANK", "OPP_DREB_RANK", 
+                    "OPP_REB_RANK", "OPP_AST_RANK", "OPP_TOV_RANK", 
+                    "OPP_STL_RANK", "OPP_BLK_RANK", "OPP_BLKA_RANK", 
+                    "OPP_PF_RANK", "OPP_PFD_RANK", "OPP_PTS_RANK", 
+                    "PLUS_MINUS_RANK", 'TEAM_NAME', 'VS_PLAYER_NAME', 
+                    'TEAM_ID', 'TEAM_ABBREVIATION', 'GP', 'MIN']
+
+    # Remove only columns that exist in the dataframe
+    columns_to_drop = [col for col in columns_to_drop if col in player_opp_df.columns]
+    player_opp_df = player_opp_df.drop(columns=columns_to_drop)
+
+    # Fetch and clean defense stats
     player_def = leaguedashplayerstats.LeagueDashPlayerStats(measure_type_detailed_defense='Defense', per_mode_detailed='PerGame')
     player_def_df = player_def.get_data_frames()[0]
-    player_def_df = player_def_df.drop(columns=["AGE", "W", "L", "W_PCT", "DEF_RATING", "DREB", "DREB_PCT", "PCT_DREB", "STL", "PCT_STL", 
-        "BLK", "PCT_BLK", "OPP_PTS_OFF_TOV", "OPP_PTS_2ND_CHANCE", "OPP_PTS_FB", "OPP_PTS_PAINT", 
-        "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK", "DEF_RATING_RANK", "DREB_RANK", 
-        "DREB_PCT_RANK", "PCT_DREB_RANK", "STL_RANK", "PCT_STL_RANK", "BLK_RANK", "PCT_BLK_RANK", 
-        "OPP_PTS_OFF_TOV_RANK", "OPP_PTS_2ND_CHANCE_RANK", "OPP_PTS_FB_RANK", "OPP_PTS_PAINT_RANK", 
-        "DEF_WS_RANK",'PLAYER_NAME', 
-        'NICKNAME', 
-        'TEAM_ID', 
-        'TEAM_ABBREVIATION', 
-        'GP', 
-        'MIN'])
+    player_def_df = player_def_df.drop(columns=["AGE", "W", "L", "W_PCT", "DEF_RATING", "DREB", "DREB_PCT", "PCT_DREB", "STL", "PCT_STL", "BLK", "PCT_BLK", "OPP_PTS_OFF_TOV", "OPP_PTS_2ND_CHANCE", "OPP_PTS_FB", "OPP_PTS_PAINT", "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK", "DEF_RATING_RANK", "DREB_RANK", "DREB_PCT_RANK", "PCT_DREB_RANK", "STL_RANK", "PCT_STL_RANK", "BLK_RANK", "PCT_BLK_RANK", "OPP_PTS_OFF_TOV_RANK", "OPP_PTS_2ND_CHANCE_RANK", "OPP_PTS_FB_RANK", "OPP_PTS_PAINT_RANK", "DEF_WS_RANK", 'PLAYER_NAME', 'NICKNAME', 'TEAM_ID', 'TEAM_ABBREVIATION', 'GP', 'MIN'])
 
+    # Fetch and clean passing stats
     player_past = leaguedashptstats.LeagueDashPtStats(player_or_team='Player', per_mode_simple='PerGame', pt_measure_type='Passing')
     player_past_df = player_past.get_data_frames()[0]
-    player_past_df = player_past_df.drop(columns=["W", "L", "PASSES_MADE", "PASSES_RECEIVED", "AST", "FT_AST", "SECONDARY_AST", 
-        "AST_POINTS_CREATED", "AST_ADJ", "AST_TO_PASS_PCT", "AST_TO_PASS_PCT_ADJ",'PLAYER_NAME', 
-        'TEAM_ID', 
-        'TEAM_ABBREVIATION', 
-        'GP', 
-        'MIN'])
-    
+    player_past_df = player_past_df.drop(columns=["W", "L", "PASSES_MADE", "PASSES_RECEIVED", "AST", "FT_AST", "AST_POINTS_CREATED", "AST_ADJ", "AST_TO_PASS_PCT", "AST_TO_PASS_PCT_ADJ", 'PLAYER_NAME', 'TEAM_ID', 'TEAM_ABBREVIATION', 'GP', 'MIN'])
+
+    # Fetch and clean speed/distance stats
     player_sd = leaguedashptstats.LeagueDashPtStats(player_or_team='Player', per_mode_simple='PerGame', pt_measure_type='SpeedDistance')
     player_sd_df = player_sd.get_data_frames()[0]
-    player_sd_df = player_sd_df.drop(columns=["W", "L", "MIN1", "DIST_MILES", "DIST_MILES_OFF", "DIST_MILES_DEF", "AVG_SPEED_OFF", "AVG_SPEED_DEF",'PLAYER_NAME', 
-        'TEAM_ID', 
-        'TEAM_ABBREVIATION', 
-        'GP', 
-        'MIN'])
-    
+    player_sd_df = player_sd_df.drop(columns=["W", "L", "MIN1", "DIST_MILES", "DIST_MILES_OFF", "DIST_MILES_DEF", "AVG_SPEED_OFF", "AVG_SPEED_DEF", 'PLAYER_NAME', 'TEAM_ID', 'TEAM_ABBREVIATION', 'GP', 'MIN'])
+
+    # Fetch and clean hustle stats
     player_hustle = leaguehustlestatsplayer.LeagueHustleStatsPlayer(per_mode_time='PerGame')
     player_hustle_df = player_hustle.get_data_frames()[0]
-    player_hustle_df = player_hustle_df.drop(columns=["AGE", "CONTESTED_SHOTS", "CONTESTED_SHOTS_2PT", "CONTESTED_SHOTS_3PT", 
-        "CHARGES_DRAWN", "SCREEN_ASSISTS", "SCREEN_AST_PTS", "OFF_LOOSE_BALLS_RECOVERED", 
-        "DEF_LOOSE_BALLS_RECOVERED", "PCT_LOOSE_BALLS_RECOVERED_OFF", "PCT_LOOSE_BALLS_RECOVERED_DEF", 
-        "OFF_BOXOUTS", "DEF_BOXOUTS", "BOX_OUT_PLAYER_TEAM_REBS", "BOX_OUT_PLAYER_REBS", 
-        "PCT_BOX_OUTS_OFF", "PCT_BOX_OUTS_DEF", "PCT_BOX_OUTS_TEAM_REB",'PLAYER_NAME',  
-        'TEAM_ID', 
-        'TEAM_ABBREVIATION', 
-        'G', 
-        'MIN'])
-    
-    player_ids = player_base_df['PLAYER_ID'].unique()
-    player_dunk_df = []
-    for id in player_ids:
-        retry_count = 0
-        while retry_count < 8:
+    player_hustle_df = player_hustle_df.drop(columns=["AGE", "CONTESTED_SHOTS", "CONTESTED_SHOTS_2PT", "CONTESTED_SHOTS_3PT", "CHARGES_DRAWN", "SCREEN_ASSISTS", "SCREEN_AST_PTS", "OFF_LOOSE_BALLS_RECOVERED", "DEF_LOOSE_BALLS_RECOVERED", "PCT_LOOSE_BALLS_RECOVERED_OFF", "PCT_LOOSE_BALLS_RECOVERED_DEF", "OFF_BOXOUTS", "DEF_BOXOUTS", "BOX_OUT_PLAYER_TEAM_REBS", "BOX_OUT_PLAYER_REBS", "PCT_BOX_OUTS_OFF", "PCT_BOX_OUTS_DEF", "PCT_BOX_OUTS_TEAM_REB", 'PLAYER_NAME', 'TEAM_ID', 'TEAM_ABBREVIATION', 'G', 'MIN'])
+
+    def fetch_dunk_data(id, attempt=1):
+        while True:  # Infinite retries until success
             try:
-                player_dunk = playerdashboardbyshootingsplits.PlayerDashboardByShootingSplits(
-                    player_id=id, per_mode_detailed="PerGame", timeout=60
-                )
+                player_dunk = playerdashboardbyshootingsplits.PlayerDashboardByShootingSplits(player_id=id, per_mode_detailed="PerGame", timeout=20)
                 player_df = player_dunk.get_data_frames()[5]
                 dunk_df = player_df[player_df['GROUP_VALUE'] == 'Dunk']
-
                 if not dunk_df.empty:
-                    dunk_fga = dunk_df['FGA'].values[0]
-                    player_dunk_df.append({'PLAYER_ID': id, 'DUNK_FGA': dunk_fga})
-                    print(f"{id} dunk data added")
-                else:
-                    print(f"{id} has no dunk data")
-                
-                break  # Exit retry loop on success
-
+                    return {'PLAYER_ID': id, 'DUNK_FGA': dunk_df['FGA'].values[0]}
+                return {'PLAYER_ID': id, 'DUNK_FGA': 0}  # Legit no dunks
             except (requests.exceptions.RequestException, Timeout) as e:
-                wait_time = (2 ** retry_count) + random.uniform(0, 1)  # Exponential backoff
-                print(f"Retry {retry_count + 1} for {id} after {wait_time:.2f}s: {e}")
+                wait_time = min((2 ** attempt) + random.uniform(0, 1), 10)  # Cap at 10s
+                print(f"Attempt {attempt} for {id} failed after {wait_time:.2f}s: {e}")
                 time.sleep(wait_time)
-                retry_count += 1
-        else:
-            print(f"Max retries reached for player {id}.")
-        
-        time.sleep(10)
-            
-    player_dunk_df = pd.DataFrame(player_dunk_df)
+                attempt += 1
 
+    player_ids = player_base_df['PLAYER_ID'].unique()
+    player_dunk_df = []
+    failed_ids = []  # Track players that need retrying
+    batch_size = 20
+
+    # Process all players in batches
+    for i in range(0, len(player_ids), batch_size):
+        batch_ids = player_ids[i:i + batch_size]
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            future_to_id = {executor.submit(fetch_dunk_data, id): id for id in batch_ids}
+            for future in as_completed(future_to_id):
+                try:
+                    result = future.result()
+                    player_dunk_df.append(result)
+                    if result['DUNK_FGA'] > 0:
+                        print(f"{result['PLAYER_ID']} dunk data added: {result['DUNK_FGA']}")
+                    else:
+                        print(f"{result['PLAYER_ID']} has no dunk data")
+                except Exception as e:  # Catch any unexpected failures
+                    failed_id = future_to_id[future]
+                    print(f"Unexpected failure for {failed_id}: {e}")
+                    failed_ids.append(failed_id)
+        time.sleep(1)  # 1s breather between batches
+
+    # Retry failed players until all succeed
+    while failed_ids:
+        print(f"Retrying {len(failed_ids)} failed players...")
+        retry_ids = failed_ids[:]
+        failed_ids = []
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            future_to_id = {executor.submit(fetch_dunk_data, id): id for id in retry_ids}
+            for future in as_completed(future_to_id):
+                try:
+                    result = future.result()
+                    player_dunk_df.append(result)
+                    if result['DUNK_FGA'] > 0:
+                        print(f"{result['PLAYER_ID']} dunk data added (retry): {result['DUNK_FGA']}")
+                    else:
+                        print(f"{result['PLAYER_ID']} has no dunk data (retry)")
+                except Exception as e:
+                    failed_id = future_to_id[future]
+                    print(f"Retry failed for {failed_id}: {e}")
+                    failed_ids.append(failed_id)
+        time.sleep(2)  # Longer breather for retries
+
+    player_dunk_df = pd.DataFrame(player_dunk_df)
+    print(f"Completed: {len(player_dunk_df)} players processed.")
+
+    # Fetch and clean scoring stats
     player_score = leaguedashplayerstats.LeagueDashPlayerStats(measure_type_detailed_defense='Scoring', per_mode_detailed='PerGame')
     player_score_df = player_score.get_data_frames()[0]
-    player_score_df = player_score_df.drop(columns=["PLAYER_NAME", "NICKNAME", "TEAM_ID", "TEAM_ABBREVIATION", "AGE", "GP", "W", "L", "W_PCT", 
-            "MIN", "PCT_FGA_2PT", "PCT_FGA_3PT", "PCT_PTS_2PT", "PCT_PTS_2PT_MR", "PCT_PTS_3PT", "PCT_PTS_FB", 
-            "PCT_PTS_FT", "PCT_PTS_OFF_TOV", "PCT_PTS_PAINT", "PCT_AST_2PM", "PCT_UAST_2PM", "PCT_AST_3PM", 
-            "PCT_UAST_3PM", "PCT_AST_FGM", "FGM", "FGA", "FG_PCT", "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", 
-            "MIN_RANK", "PCT_FGA_2PT_RANK", "PCT_FGA_3PT_RANK", "PCT_PTS_2PT_RANK", "PCT_PTS_2PT_MR_RANK", 
-            "PCT_PTS_3PT_RANK", "PCT_PTS_FB_RANK", "PCT_PTS_FT_RANK", "PCT_PTS_OFF_TOV_RANK", 
-            "PCT_PTS_PAINT_RANK", "PCT_AST_2PM_RANK", "PCT_UAST_2PM_RANK", "PCT_AST_3PM_RANK", 
-            "PCT_UAST_3PM_RANK", "PCT_AST_FGM_RANK", "PCT_UAST_FGM_RANK", "FGM_RANK", "FGA_RANK", "FG_PCT_RANK"])
+    player_score_df = player_score_df.drop(columns=["PLAYER_NAME", "NICKNAME", "TEAM_ID", "TEAM_ABBREVIATION", "AGE", "GP", "W", "L", "W_PCT", "MIN", "PCT_FGA_2PT", "PCT_FGA_3PT", "PCT_PTS_2PT", "PCT_PTS_2PT_MR", "PCT_PTS_FB", "PCT_PTS_FT", "PCT_PTS_OFF_TOV", "PCT_AST_2PM", "PCT_UAST_2PM", "PCT_AST_3PM", "PCT_UAST_3PM", "PCT_AST_FGM", "FGM", "FGA", "FG_PCT", "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK", "PCT_FGA_2PT_RANK", "PCT_FGA_3PT_RANK", "PCT_PTS_2PT_RANK", "PCT_PTS_2PT_MR_RANK", "PCT_PTS_3PT_RANK", "PCT_PTS_FB_RANK", "PCT_PTS_FT_RANK", "PCT_PTS_OFF_TOV_RANK", "PCT_PTS_PAINT_RANK", "PCT_AST_2PM_RANK", "PCT_UAST_2PM_RANK", "PCT_AST_3PM_RANK", "PCT_UAST_3PM_RANK", "PCT_AST_FGM_RANK", "PCT_UAST_FGM_RANK", "FGM_RANK", "FGA_RANK", "FG_PCT_RANK"])
 
-    dataframes= [player_base_df, player_adv_df, player_def_df, player_hustle_df, player_misc_df, player_opp_df, player_past_df, player_sd_df, player_dunk_df, player_score_df]
+    # Merge all DataFrames
+    dataframes = [player_base_df, player_adv_df, player_def_df, player_hustle_df, player_misc_df, player_opp_df, player_past_df, player_sd_df, player_dunk_df, player_score_df]
     combined_df = dataframes[0]
+    for df in dataframes[1:]:
+        combined_df = pd.merge(combined_df, df, on='PLAYER_ID', how='inner')
 
-    for df in dataframes[1:]: combined_df = pd.merge(combined_df, df, on='PLAYER_ID', how='inner')
-
-    # Drop duplicates from combined_df
+    # Drop duplicates and filter for relevant players
     combined_df = combined_df.drop_duplicates(subset=["PLAYER_ID"], keep="first")
-
-    # Filter combined_df for players with MIN >= 15 and GP >= 20
     # filtered_df = combined_df[(combined_df["MIN"] >= 15) & (combined_df["GP"] >= 20)]
 
-    # Function for Min-Max Scaling (0-1)
+    # Normalization and rescaling functions
     def normalize(series):
         scaler = MinMaxScaler()
         return scaler.fit_transform(series.values.reshape(-1, 1)).flatten()
 
-    # Function for Softer Rescaling
     def rescale(series, factor=10):
         return ((series - series.mean()) / series.std() * factor + 50).clip(0, 100)
 
-    # Scoring Formula
+    # Scoring Formula: Emphasize efficiency and shot creation
     combined_df["Scoring"] = (0.30 * normalize(combined_df["PTS"]) +
-                            0.20 * normalize(combined_df["FGA"]) +
-                            0.10 * normalize(combined_df["FTA"]) +
-                            0.15 * normalize(combined_df["TS_PCT"]) +
-                            0.15 * normalize(combined_df["EFG_PCT"]) +
-                            0.10 * normalize(combined_df["PCT_UAST_FGM"])) * 100
+                              0.10 * normalize(combined_df["FGA"]) +
+                              0.10 * normalize(combined_df["FTA"]) +
+                              0.20 * normalize(combined_df["TS_PCT"]) +
+                              0.10 * normalize(combined_df["EFG_PCT"]) +
+                              0.20 * normalize(combined_df["PCT_UAST_FGM"])) * 100
     combined_df["Scoring"] = rescale(combined_df["Scoring"], factor=12)
 
-    # Playmaking Formula
-    combined_df["Playmaking"] = (0.35 * normalize(combined_df["AST"]) +
-                                0.30 * normalize(combined_df["POTENTIAL_AST"]) +
-                                0.10 * normalize(combined_df["USG_PCT"]) -
-                                0.20 * normalize(combined_df["TOV"])) * 100
-    combined_df["Playmaking"] = rescale(combined_df["Playmaking"], factor=11)
+    # Playmaking Formula: Include secondary assists for facilitators
+    combined_df["Playmaking"] = (0.30 * normalize(combined_df["AST"]) +
+                                 0.25 * normalize(combined_df["POTENTIAL_AST"]) +
+                                 0.15 * normalize(combined_df["SECONDARY_AST"]) +
+                                 0.10 * normalize(combined_df["USG_PCT"]) -
+                                 0.20 * normalize(combined_df["TOV"])) * 100
+    combined_df["Playmaking"] = rescale(combined_df["Playmaking"], factor=10)
 
-    # Rebounding Formula
+    # Rebounding Formula: Keep simple and balanced
     combined_df["Rebounding"] = (0.40 * normalize(combined_df["REB"]) +
-                                0.35 * normalize(combined_df["OREB"]) +
-                                0.35 * normalize(combined_df["DREB"])) * 100
-    combined_df["Rebounding"] = rescale(combined_df["Rebounding"], factor=12)
+                                 0.30 * normalize(combined_df["OREB"]) +
+                                 0.30 * normalize(combined_df["DREB"])) * 100
+    combined_df["Rebounding"] = rescale(combined_df["Rebounding"], factor=10)
 
-    # Defense Formula
-    combined_df["Defense"] = (0.25 * normalize(combined_df["BLK"]) +
-                            0.10 * normalize(combined_df["DEFLECTIONS"]) +
-                            0.10 * normalize(combined_df["STL"]) -
-                            0.15 * normalize(combined_df["PF"]) +
-                            #0.15 * normalize(combined_df["DEF_WS"]) -
-                            0.25 * normalize(combined_df["OPP_FG_PCT"]) -
-                            0.20 * normalize(combined_df["OPP_FG3_PCT"])) * 100
-    combined_df["Defense"] = rescale(combined_df["Defense"], factor=10)
+    # Defense Formula: Use player-specific metrics (your latest version)
+    combined_df["Defense"] = (0.30 * normalize(combined_df["BLK"]) +
+                              0.15 * normalize(combined_df["DEFLECTIONS"]) +
+                              0.15 * normalize(combined_df["STL"]) +
+                              0.10 * normalize(combined_df["DEF_WS"]) -
+                              0.15 * normalize(combined_df["PF"]) +
+                              0.15 * normalize(combined_df["OPP_FG_PCT"])) * 100
+    combined_df["Defense"] = rescale(combined_df["Defense"], factor=12)
 
-    # Athleticism Formula
-    combined_df["Athleticism"] = (0.20 * normalize(combined_df["PTS_FB"]) +
-                                0.15 * normalize(combined_df["DIST_FEET"]) +
-                                0.15 * normalize(combined_df["AVG_SPEED"]) +
-                                0.20 * normalize(combined_df["LOOSE_BALLS_RECOVERED"]) +
-                                0.05 * normalize(combined_df["BOX_OUTS"]) +
-                                0.15 * normalize(combined_df["PCT_BOX_OUTS_REB"]) +
-                                0.10 * normalize(combined_df["DUNK_FGA"])) * 100
-    combined_df["Athleticism"] = rescale(combined_df["Athleticism"], factor=12)
+    # Athleticism Formula: Broaden to include speed and steals (your latest version)
+    combined_df["Athleticism"] = (0.25 * normalize(combined_df["PTS_FB"]) +
+                                  0.20 * normalize(combined_df["DIST_FEET"]) +
+                                  0.20 * normalize(combined_df["AVG_SPEED"]) +
+                                  0.20 * normalize(combined_df["LOOSE_BALLS_RECOVERED"]) +
+                                  0.15 * normalize(combined_df["DUNK_FGA"])) * 100
+    combined_df["Athleticism"] = rescale(combined_df["Athleticism"], factor=10)
 
+    # Apply rescaling and compute ranks
+    categories = ["Scoring", "Playmaking", "Rebounding", "Defense", "Athleticism"]
+    for category in categories:
+        # combined_df[category] = rescale(combined_df[category], factor=10)
+        combined_df[f"{category}_Rank"] = combined_df[category].rank(pct=True) * 100
+
+    # Compute average grade for relative strengths/weaknesses
+    combined_df["Avg_Grade"] = combined_df[categories].mean(axis=1)
+    for category in categories:
+        combined_df[f"{category}_Diff"] = combined_df[category] - combined_df["Avg_Grade"]
+
+    # Cluster-based archetype classification
+    kmeans = KMeans(n_clusters=10, random_state=42)
+    combined_df["Cluster"] = kmeans.fit_predict(combined_df[categories])
+
+    # Updated archetype assignment with refined rules
+    def assign_archetype(row):
+        scores = {
+            "Scoring": row["Scoring"],
+            "Playmaking": row["Playmaking"],
+            "Rebounding": row["Rebounding"],
+            "Defense": row["Defense"],
+            "Athleticism": row["Athleticism"]
+        }
+        top_cat = max(scores, key=scores.get)
+        top_score = scores[top_cat]
+        second_cat = sorted(scores, key=scores.get, reverse=True)[1]
+        second_score = scores[second_cat]
+
+        # Check for multi-category stars first
+        high_count = sum(1 for score in scores.values() if score > 70)
+        low_count = sum(1 for score in scores.values() if score < 60)
+        if high_count >= 3 and low_count == 0:
+            return "All-Around Star"  # e.g., Jokić, LeBron
+
+        # High-scoring archetypes
+        if top_cat == "Scoring" and top_score > 70:
+            if row["PCT_PTS_3PT"] > 0.4:
+                return "Sharpshooter"  # e.g., Curry
+            elif scores["Playmaking"] > 65:
+                return "Scoring Playmaker"  # e.g., Luka
+            elif scores["Athleticism"] > 65:
+                return "Slashing Scorer"  # e.g., Edwards
+            return "Pure Scorer"  # e.g., Durant
+
+        # High Playmaking archetypes
+        elif top_cat == "Playmaking" and top_score > 75:
+            if scores["Scoring"] > 65:
+                return "Scoring Playmaker"  # e.g., Harden
+            elif scores["Defense"] > 65:
+                return "Floor General"  # e.g., CP3
+            return "Pure Playmaker"  # e.g., Rondo
+
+        # High Rebounding archetypes
+        elif top_cat == "Rebounding" and top_score > 75:
+            if scores["Defense"] > 70:
+                return "Rim Protector"  # e.g., Gobert
+            elif scores["Scoring"] > 65 and row["PCT_PTS_3PT"] > 0.35:
+                return "Stretch Big"  # e.g., Towns
+            elif scores["Scoring"] > 65:
+                return "Post Scorer"  # e.g., Jokić
+            return "Glass Cleaner"  # e.g., Drummond
+
+        # High Defense archetypes
+        elif top_cat == "Defense" and top_score > 75:
+            if scores["Athleticism"] > 65:
+                return "Hustle Defender"  # e.g., Smart
+            elif scores["Rebounding"] > 65:
+                return "Defensive Anchor"  # e.g., Draymond
+            elif scores["Scoring"] > 60 and row["PCT_PTS_3PT"] > 0.3:
+                return "3-and-D Threat"  # e.g., Bridges
+            return "Lockdown Defender"  # e.g., Holiday
+
+        # High Athleticism archetypes
+        elif top_cat == "Athleticism" and top_score > 75:
+            if scores["Scoring"] > 65 and row["PCT_PTS_PAINT"] > 0.5:
+                return "Rim Runner"  # e.g., Capela
+            elif scores["Scoring"] > 65:
+                return "Athletic Finisher"  # e.g., Giannis
+            elif scores["Defense"] > 65:
+                return "Energy Defender"  # e.g., Rodman
+            return "Energy Spark"  # e.g., Harrell
+
+        # Balanced or lower-impact players
+        else:
+            if scores["Scoring"] > 65 and scores["Playmaking"] > 65 and top_score < 75:
+                return "Combo Creator"  # e.g., VanVleet
+            elif scores["Scoring"] > 60 and scores["Defense"] > 60:
+                return "Two-Way Threat"  # e.g., Kawhi
+            elif scores["Playmaking"] > 60 and scores["Defense"] > 60:
+                return "Two-Way Facilitator"  # e.g., Lowry
+            elif scores["Scoring"] > 60 and scores["Athleticism"] > 60:
+                return "Dynamic Scorer"  # e.g., Jaylen Brown
+            elif all(50 <= score <= 70 for score in scores.values()):
+                return "Versatile Contributor" 
+            return "Role Player"  # Catch-all
+
+    combined_df["Archetype"] = combined_df.apply(assign_archetype, axis=1)
+
+    # Save to database
     combined_df.to_sql(name=table, con=db, if_exists='replace', index=False)
-    print("Grades updated")
+    print("Grades and archetypes updated")
 
-scheduler = BackgroundScheduler()
+# scheduler = BackgroundScheduler()
 
-@scheduler.scheduled_job('cron', hour=2, timezone='US/Central')
-def runPrograms():
-    fetchPlayers()
-    fetchStandings()
-    fetchGamelogs()
-    fetchGrades()
+# @scheduler.scheduled_job('cron', hour=2, timezone='US/Central')
+# def runPrograms():
+#     fetchPlayers()
+#     fetchStandings()
+#     fetchGamelogs()
+#     fetchGrades()
 
-scheduler.start()
+# scheduler.start()
 
 @app.route('/games')
 def games():
@@ -525,7 +618,8 @@ def players():
             g.Playmaking, 
             g.Rebounding, 
             g.Defense, 
-            g.Athleticism
+            g.Athleticism,
+            g.Archetype
         FROM players p
         LEFT JOIN grades g ON p.PLAYER_ID = g.PLAYER_ID
     """
@@ -533,7 +627,7 @@ def players():
 
     players_dict = {}
     for index, row in players_db.iterrows():
-        team_id, team_name, player_id, player_name, position, team, jersey_number, points, rebounds, assists, steals, blocks, turnovers, scoring_grade, playmaking_grade, rebounding_grade, defense_grade, athleticism_grade = row
+        team_id, team_name, player_id, player_name, position, team, jersey_number, points, rebounds, assists, steals, blocks, turnovers, scoring_grade, playmaking_grade, rebounding_grade, defense_grade, athleticism_grade, archetype = row
         
         # Helper function to replace NaN with None
         def sanitize_value(value):
@@ -557,7 +651,8 @@ def players():
             'playmaking_grade': sanitize_value(playmaking_grade), 
             'rebounding_grade': sanitize_value(rebounding_grade), 
             'defense_grade': sanitize_value(defense_grade), 
-            'athleticism_grade': sanitize_value(athleticism_grade)
+            'athleticism_grade': sanitize_value(athleticism_grade),
+            'archetype': sanitize_value(archetype)
         })
 
     return jsonify(players_dict)
@@ -651,5 +746,5 @@ if __name__ == '__main__':
     # fetchPlayers()
     # fetchStandings()
     # fetchGamelogs()
-    # fetchGrades()
+    fetchGrades()
     app.run(debug=False)

@@ -159,6 +159,9 @@ const Players = () => {
             >
               Position {sortBy === "position" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
+            <th className="py-3 px-6 text-left font-semibold">
+              Archetype
+            </th>
             <th
               className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-cyan-300 transition-colors"
               onClick={() => handleSort("jersey_number")}
@@ -214,6 +217,7 @@ const Players = () => {
                 {player.player_name}
               </td>
               <td className="py-4 px-6">{player.position}</td>
+              <td className="py-4 px-6">{player.archetype}</td>
               <td className="py-4 px-6">{player.jersey_number}</td>
               <td className="py-4 px-6">{player.team_name}</td>
               <td className="py-4 px-6">{player.scoring_grade?.toFixed(1) || '-'}</td>

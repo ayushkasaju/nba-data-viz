@@ -328,6 +328,7 @@ const Profile = () => {
                   data={radarData}
                 >
                   <PolarGrid stroke="#4B5563" />
+                  <PolarRadiusAxis domain={[0, 100]} stroke="none"/>
                   <PolarAngleAxis dataKey="stat" tick={{ fill: "#fff", fontSize: 12 }} />
                   <Radar 
                     name={playerName} 
