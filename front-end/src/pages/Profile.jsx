@@ -265,6 +265,7 @@ const Profile = () => {
                   {profile.player_info[0]?.DRAFT_YEAR !== 0 && (
                     <p className="text-sm sm:text-base"><span className="font-semibold text-blue-300">Draft:</span> {profile.player_info[0]?.DRAFT_YEAR} Round {profile.player_info[0]?.DRAFT_ROUND} Pick {profile.player_info[0]?.DRAFT_NUMBER}</p>
                   )}
+                  <p className="text-sm sm:text-base"><span className="font-semibold text-blue-300">Archetype:</span> {profile.player_grades[0]?.Archetype || "N/A"}</p>
                 </div>
                 <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
                   Season Averages
