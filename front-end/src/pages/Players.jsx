@@ -9,6 +9,8 @@ const Players = () => {
   const [sortBy, setSortBy] = useState("last_name");
   const [sortOrder, setSortOrder] = useState("asc");
   const [teamFilter, setTeamFilter] = useState("all");
+  const [archetypeFilter, setArchetypeFilter] = useState("all");
+  const [positionFilter, setPositionFilter] = useState("all");
 
   useEffect(() => {
     const fetchPlayers = async () => {
@@ -35,6 +37,8 @@ const Players = () => {
 
   const handleSearch = (e) => setSearch(e.target.value);
   const handleTeamFilter = (e) => setTeamFilter(e.target.value);
+  const handleArchetypeFilter = (e) => setArchetypeFilter(e.target.value);
+  const handlePositionFilter = (e) => setPositionFilter(e.target.value);
 
   const handleSort = (field) => {
     if (sortBy === field) {
@@ -50,7 +54,7 @@ const Players = () => {
     return nameParts[nameParts.length - 1];
   };
 
-  // Get unique teams and positions for filter options
+  // Get unique teams, positions, and archetypes for filter options
   const teams = Object.keys(players)
     .filter(teamId => teamId !== "0")
     .map(teamId => players[teamId].team_name)
@@ -60,6 +64,12 @@ const Players = () => {
     Object.keys(players)
       .filter(teamId => teamId !== "0")
       .flatMap(teamId => players[teamId].players.map(p => p.position))
+  )].sort();
+
+  const archetypes = [...new Set(
+    Object.keys(players)
+      .filter(teamId => teamId !== "0")
+      .flatMap(teamId => players[teamId].players.map(p => p.archetype).filter(a => a))
   )].sort();
 
   // Filter and sort players
@@ -74,7 +84,9 @@ const Players = () => {
     })
     .filter(player => 
       player.player_name.toLowerCase().includes(search.toLowerCase()) &&
-      (teamFilter === "all" || player.team_name === teamFilter)
+      (teamFilter === "all" || player.team_name === teamFilter) &&
+      (archetypeFilter === "all" || player.archetype === archetypeFilter) &&
+      (positionFilter === "all" || player.position === positionFilter)
     )
     .sort((a, b) => {
       if (sortBy === "last_name") {
@@ -259,17 +271,41 @@ const Players = () => {
                         focus:border-blue-500 text-white placeholder-gray-400 focus:outline-none 
                         transition-all duration-300"
             />
-            <select
-              value={teamFilter}
-              onChange={handleTeamFilter}
-              className="w-full sm:w-48 px-4 py-2 rounded-lg bg-gray-800/50 border border-gray-700 
-                        focus:border-blue-500 text-white focus:outline-none transition-all duration-300"
-            >
-              <option value="all">All Teams</option>
-              {teams.map(team => (
-                <option key={team} value={team}>{team}</option>
-              ))}
-            </select>
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+              <select
+                value={teamFilter}
+                onChange={handleTeamFilter}
+                className="w-full sm:w-48 px-4 py-2 rounded-lg bg-gray-800/50 border border-gray-700 
+                          focus:border-blue-500 text-white focus:outline-none transition-all duration-300"
+              >
+                <option value="all">All Teams</option>
+                {teams.map(team => (
+                  <option key={team} value={team}>{team}</option>
+                ))}
+              </select>
+              <select
+                value={positionFilter}
+                onChange={handlePositionFilter}
+                className="w-full sm:w-48 px-4 py-2 rounded-lg bg-gray-800/50 border border-gray-700 
+                          focus:border-blue-500 text-white focus:outline-none transition-all duration-300"
+              >
+                <option value="all">All Positions</option>
+                {positions.map(position => (
+                  <option key={position} value={position}>{position}</option>
+                ))}
+              </select>
+              <select
+                value={archetypeFilter}
+                onChange={handleArchetypeFilter}
+                className="w-full sm:w-48 px-4 py-2 rounded-lg bg-gray-800/50 border border-gray-700 
+                          focus:border-blue-500 text-white focus:outline-none transition-all duration-300"
+              >
+                <option value="all">All Archetypes</option>
+                {archetypes.map(archetype => (
+                  <option key={archetype} value={archetype}>{archetype}</option>
+                ))}
+              </select>
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setViewMode("grid")}
