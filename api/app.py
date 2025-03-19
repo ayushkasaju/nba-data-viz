@@ -694,7 +694,7 @@ def gamePlayers(gameId):
 def nbaPlayerInfo(playerId):
     player_info = (pd.read_sql(f"SELECT * FROM players WHERE Player_ID = {playerId}", con=db)).to_dict(orient='records')
     player_log = pd.read_sql(f"SELECT *, STR_TO_DATE(GAME_DATE, '%M %d, %Y') AS formatted_date FROM gamelogs WHERE Player_ID = {playerId} ORDER BY formatted_date ASC", con=db)
-    player_grades = (pd.read_sql(f"SELECT PTS, REB, AST, STL, BLK, TOV, Scoring, Playmaking, Rebounding, Defense, Athleticism FROM grades WHERE Player_ID = {playerId}", con=db)).to_dict(orient='records')
+    player_grades = (pd.read_sql(f"SELECT PTS, REB, AST, STL, BLK, TOV, Scoring, Playmaking, Rebounding, Defense, Athleticism, Archetype FROM grades WHERE Player_ID = {playerId}", con=db)).to_dict(orient='records')
 
 
     gamelogs = []
