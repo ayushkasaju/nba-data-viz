@@ -652,7 +652,7 @@ def players():
             'rebounding_grade': sanitize_value(rebounding_grade), 
             'defense_grade': sanitize_value(defense_grade), 
             'athleticism_grade': sanitize_value(athleticism_grade),
-            'archetype': sanitize_value(archetype)
+            'archetype': archetype
         })
 
     return jsonify(players_dict)
@@ -746,5 +746,5 @@ if __name__ == '__main__':
     # fetchPlayers()
     # fetchStandings()
     # fetchGamelogs()
-    fetchGrades()
+    # fetchGrades()
     app.run(debug=False)
