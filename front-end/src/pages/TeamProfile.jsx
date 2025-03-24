@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
+// Function to dynamically import logos from the folder
+const importLogo = (teamId) => {
+  try {
+    return require(`../assets/logos/${teamId}.png`); // Adjust path based on your folder structure
+  } catch (err) {
+    console.warn(`Logo not found for team ID: ${teamId}`);
+    return null; // Fallback if logo is missing
+  }
+};
+
 const TeamProfile = () => {
   const [teamProfile, setTeamProfile] = useState({
     team_info: [],
@@ -31,7 +41,8 @@ const TeamProfile = () => {
   }, [teamId]);
 
   const teamName = teamProfile.team_info.length > 0 ? teamProfile.team_info[0].TEAM_FULL_NAME : "";
-  const teamLogo = teamProfile.team_info.length > 0 ? teamProfile.team_info[0].TEAM_LOGO : null;
+  const teamLogo = importLogo(teamId); 
+  const isJazz = teamId === "1610612762"
 
   const handlePlayerClick = (playerId) => {
     navigate(`/nba/player/${playerId}`);
@@ -47,12 +58,18 @@ const TeamProfile = () => {
       <div className="container mx-auto px-4 py-12 z-10 relative">
         {/* Header Section */}
         <div className="flex flex-col items-center mb-12">
-          {teamLogo && (
+          {teamLogo ? (
             <img
               src={teamLogo}
               alt={teamName}
-              className="w-40 h-40 md:w-48 md:h-48 rounded-full border-4 border-orange-500 object-cover mb-4"
+              className={`w-40 h-40 md:w-48 md:h-48 rounded-full border-4 border-orange-500 object-cover mb-4 ${
+                isJazz ? "bg-white p-2" : ""
+              }`}
             />
+          ) : (
+            <div className="w-40 h-40 md:w-48 md:h-48 rounded-full border-4 border-orange-500 bg-gradient-to-br from-orange-500 to-red-600 mb-4 flex items-center justify-center">
+              <span className="text-white text-2xl font-bold">{teamName.charAt(0)}</span>
+            </div>
           )}
           <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-purple-600">
             {teamName}

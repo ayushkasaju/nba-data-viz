@@ -157,62 +157,65 @@ const Players = () => {
   );
 
   const renderTableView = () => (
-    <div className="relative bg-gradient-to-br from-gray-800 to-black p-6 rounded-xl border border-gray-700 hover:border-orange-500 transition-all duration-300 shadow-md overflow-x-auto">
-      <div className="absolute -top-4 -left-4 w-8 h-8 bg-orange-500 rounded-full" />
-      <table className="w-full text-white">
+    <div className="overflow-x-auto">
+      <table className="w-full text-white border-collapse min-w-[1000px]">
         <thead>
-          <tr className="bg-gray-900/50">
+          <tr className="bg-gray-900">
             <th
-              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors"
+              className="py-3 px-4 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors text-sm"
               onClick={() => handleSort("last_name")}
             >
               Player {sortBy === "last_name" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
             <th
-              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors"
+              className="py-3 px-4 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors text-sm"
               onClick={() => handleSort("position")}
             >
-              Position {sortBy === "position" && (sortOrder === "asc" ? "↑" : "↓")}
+              Pos {sortBy === "position" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
-            <th className="py-3 px-6 text-left font-semibold">Archetype</th>
+            <th className="py-3 px-4 text-left font-semibold text-sm">
+              Archetype
+            </th>
             <th
-              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors"
+              className="py-3 px-4 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors text-sm"
               onClick={() => handleSort("jersey_number")}
             >
-              Jersey # {sortBy === "jersey_number" && (sortOrder === "asc" ? "↑" : "↓")}
+              # {sortBy === "jersey_number" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
-            <th className="py-3 px-6 text-left font-semibold">Team</th>
+            <th className="py-3 px-4 text-left font-semibold text-sm">
+              Team
+            </th>
             <th
-              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors"
+              className="py-3 px-4 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors text-sm"
               onClick={() => handleSort("scoring_grade")}
             >
               Scoring {sortBy === "scoring_grade" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
             <th
-              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors"
+              className="py-3 px-4 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors text-sm"
               onClick={() => handleSort("playmaking_grade")}
             >
               Playmaking {sortBy === "playmaking_grade" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
             <th
-              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors"
+              className="py-3 px-4 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors text-sm"
               onClick={() => handleSort("rebounding_grade")}
             >
               Rebounding {sortBy === "rebounding_grade" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
             <th
-              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors"
+              className="py-3 px-4 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors text-sm"
               onClick={() => handleSort("defense_grade")}
             >
               Defense {sortBy === "defense_grade" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
             <th
-              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors"
+              className="py-3 px-4 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors text-sm"
               onClick={() => handleSort("athleticism_grade")}
             >
               Athleticism {sortBy === "athleticism_grade" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
-            <th className="py-3 px-6 text-left font-semibold">Action</th>
+            <th className="py-3 px-4 text-left font-semibold text-sm">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -223,25 +226,22 @@ const Players = () => {
                 index % 2 === 0 ? "bg-gray-800/20" : ""
               }`}
             >
-              <td className="py-4 px-6 flex items-center gap-2">
-                <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-md" />
-                {player.player_name}
-              </td>
-              <td className="py-4 px-6">{player.position}</td>
-              <td className="py-4 px-6">{player.archetype || "N/A"}</td>
-              <td className="py-4 px-6">{player.jersey_number}</td>
-              <td className="py-4 px-6">{player.team_name}</td>
-              <td className="py-4 px-6">{player.scoring_grade?.toFixed(1) || "-"}</td>
-              <td className="py-4 px-6">{player.playmaking_grade?.toFixed(1) || "-"}</td>
-              <td className="py-4 px-6">{player.rebounding_grade?.toFixed(1) || "-"}</td>
-              <td className="py-4 px-6">{player.defense_grade?.toFixed(1) || "-"}</td>
-              <td className="py-4 px-6">{player.athleticism_grade?.toFixed(1) || "-"}</td>
-              <td className="py-4 px-6">
+              <td className="py-3 px-4 text-sm">{player.player_name}</td>
+              <td className="py-3 px-4 text-sm">{player.position}</td>
+              <td className="py-3 px-4 text-sm">{player.archetype || "N/A"}</td>
+              <td className="py-3 px-4 text-sm">{player.jersey_number}</td>
+              <td className="py-3 px-4 text-sm">{player.team_name}</td>
+              <td className="py-3 px-4 text-sm">{player.scoring_grade?.toFixed(1) || "-"}</td>
+              <td className="py-3 px-4 text-sm">{player.playmaking_grade?.toFixed(1) || "-"}</td>
+              <td className="py-3 px-4 text-sm">{player.rebounding_grade?.toFixed(1) || "-"}</td>
+              <td className="py-3 px-4 text-sm">{player.defense_grade?.toFixed(1) || "-"}</td>
+              <td className="py-3 px-4 text-sm">{player.athleticism_grade?.toFixed(1) || "-"}</td>
+              <td className="py-3 px-4 text-sm">
                 <Link
                   to={`/nba/player/${player.player_id}`}
                   className="text-orange-400 hover:text-orange-300 transition-colors duration-200"
                 >
-                  View Profile
+                  View
                 </Link>
               </td>
             </tr>
@@ -261,7 +261,7 @@ const Players = () => {
       <header className="container mx-auto px-4 pt-8 sticky top-0 z-10">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <h1 className="md:text-6xl sm:text-5xl text-3xl font-extrabold tracking-tight">
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-purple-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-purple-600">
               All Players
             </span>
           </h1>

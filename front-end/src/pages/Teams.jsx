@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+// Import logos dynamically (if using src/assets)
+const importLogo = (teamId) => {
+  try {
+    return require(`../assets/logos/${teamId}.png`); // Adjust path based on your folder structure
+  } catch (err) {
+    console.warn(`Logo not found for team ID: ${teamId}`);
+    return null; // Fallback if logo is missing
+  }
+};
+
 const Teams = () => {
   const [teams, setTeams] = useState([]);
   const [search, setSearch] = useState("");
@@ -31,9 +41,7 @@ const Teams = () => {
     fetchTeams();
   }, []);
 
-  const handleSearch = (e) => {
-    setSearch(e.target.value);
-  };
+  const handleSearch = (e) => setSearch(e.target.value);
 
   const handleSort = (field) => {
     if (sortBy === field) {
@@ -98,36 +106,47 @@ const Teams = () => {
           </tr>
         </thead>
         <tbody>
-          {teamsList.map((team, index) => (
-            <tr
-              key={team.team_id}
-              className={`border-t border-gray-700 hover:bg-gray-700/50 transition-all duration-200 ${
-                index % 2 === 0 ? "bg-gray-800/20" : ""
-              }`}
-            >
-              <td className="py-4 px-6">
-                <span className="flex items-center gap-2">
-                  {team.playoff_rank}
-                  {team.playoff_rank <= 6 && (
-                    <span className="text-green-400 text-xs">✓ Playoffs</span>
-                  )}
-                  {team.playoff_rank > 6 && team.playoff_rank <= 10 && (
-                    <span className="text-orange-400 text-xs">◉ Play-In</span>
-                  )}
-                </span>
-              </td>
-              <td className="py-4 px-6">
-                <Link
-                  to={`/team/${team.team_id}`}
-                  className="text-orange-400 hover:text-orange-300 transition-colors duration-200 flex items-center gap-2"
-                >
-                  <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-md" />
-                  {team.team_name}
-                </Link>
-              </td>
-              <td className="py-4 px-6">{team.record}</td>
-            </tr>
-          ))}
+          {teamsList.map((team, index) => {
+            const logoSrc = importLogo(team.team_id); // Dynamically get logo
+            return (
+              <tr
+                key={team.team_id}
+                className={`border-t border-gray-700 hover:bg-gray-700/50 transition-all duration-200 ${
+                  index % 2 === 0 ? "bg-gray-800/20" : ""
+                }`}
+              >
+                <td className="py-4 px-6">
+                  <span className="flex items-center gap-2">
+                    {team.playoff_rank}
+                    {team.playoff_rank <= 6 && (
+                      <span className="text-green-400 text-xs">✓ Playoffs</span>
+                    )}
+                    {team.playoff_rank > 6 && team.playoff_rank <= 10 && (
+                      <span className="text-orange-400 text-xs">◉ Play-In</span>
+                    )}
+                  </span>
+                </td>
+                <td className="py-4 px-6">
+                  <Link
+                    to={`/team/${team.team_id}`}
+                    className="text-orange-400 hover:text-orange-300 transition-colors duration-200 flex items-center gap-2"
+                  >
+                    {logoSrc ? (
+                      <img
+                        src={logoSrc}
+                        alt={`${team.team_name} logo`}
+                        className={`w-6 h-6 object-contain ${team.team_id == "1610612762" ? "bg-white" : ""}`}
+                      />
+                    ) : (
+                      <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-md" />
+                    )}
+                    {team.team_name}
+                  </Link>
+                </td>
+                <td className="py-4 px-6">{team.record}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -135,15 +154,12 @@ const Teams = () => {
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden font-sans">
-      {/* Simplified Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-800 z-0" />
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PHBhdHRlcm4gaWQ9ImEiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSJ0cmFuc3BhcmVudCI+PC9yZWN0PjxjaXJjbGUgY3g9IjUiIGN5PSI1IiByPSIxLjUiIGZpbGw9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4xKSI+PC9jaXJjbGU+PC9wYXR0ZXJuPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjYSkiPjwvcmVjdD48L3N2Zz4=')] opacity-20" />
-      
-      {/* Header */}
       <header className="container mx-auto px-4 pt-8 sticky top-0 z-10">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <h1 className="md:text-6xl sm:text-5xl text-3xl font-extrabold tracking-tight">
-          <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-purple-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-purple-600">
               NBA Standings
             </span>
           </h1>
@@ -160,8 +176,6 @@ const Teams = () => {
           </div>
         </div>
       </header>
-
-      {/* Teams Section */}
       <section className="container mx-auto px-4 py-12 z-10 relative">
         {loading ? (
           <div className="flex justify-center items-center h-64">
@@ -172,15 +186,12 @@ const Teams = () => {
           </div>
         ) : filteredTeams.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Eastern Conference */}
             <div className="space-y-6">
               <h2 className="md:text-3xl sm:text-2xl text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">
                 Eastern Conference
               </h2>
               {renderTable(easternTeams, "East")}
             </div>
-
-            {/* Western Conference */}
             <div className="space-y-6">
               <h2 className="md:text-3xl sm:text-2xl text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">
                 Western Conference

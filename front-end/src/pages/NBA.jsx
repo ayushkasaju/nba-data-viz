@@ -126,7 +126,7 @@ const NBA = () => {
       <header className="container mx-auto px-4 pt-8 sticky top-0 z-10">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <h1 className="md:text-6xl sm:text-5xl text-3xl font-extrabold tracking-tight">
-          <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-purple-600">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-purple-600">
               NBA Today
             </span>
           </h1>
