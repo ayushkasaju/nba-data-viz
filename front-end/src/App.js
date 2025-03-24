@@ -17,11 +17,23 @@ import Profile from './pages/Profile'
 import Teams from './pages/Teams';
 import Navbar from './components/Navbar';
 import TeamProfile from './pages/TeamProfile';
+import { useLocation } from 'react-router-dom';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]); // Runs whenever the pathname changes
+
+  return null; // This component doesn't render anything
+}
 
 const App = () => {
   return (
     <div>
       <Router>
+        <ScrollToTop/>
         <Navbar/>
         <div className='pt-16'>
           <Routes>
