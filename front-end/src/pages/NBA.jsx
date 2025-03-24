@@ -1,6 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 
+// Function to dynamically import headshots from the folder
+const importHeadshot = (playerId) => {
+  try {
+    return require(`../assets/headshots/${playerId}.png`); // Adjust path based on your folder structure
+  } catch (err) {
+    console.warn(`Headshot not found for player ID: ${playerId}`);
+    return null; // Fallback if headshot is missing
+  }
+};
+
 const NBA = () => {
   const [games, setGames] = useState([]);
   const [players, setPlayers] = useState({ away: [], home: [] });
@@ -126,7 +136,7 @@ const NBA = () => {
       <header className="container mx-auto px-4 pt-8 sticky top-0 z-10">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <h1 className="md:text-6xl sm:text-5xl text-3xl font-extrabold tracking-tight">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-purple-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-purple-600">
               NBA Today
             </span>
           </h1>
@@ -170,12 +180,6 @@ const NBA = () => {
                     </span>
                   </div>
                 </div>
-                {/* <div className="text-center flex-grow">
-                  {getGameStatus(game) !== 1 && getTeamScores(game) !== " - " && (
-                    <p className="text-2xl font-extrabold text-white">{getTeamScores(game)}</p>
-                  )}
-                  <p className="text-sm text-gray-400 mt-2">{getGameTime(game)}</p>
-                </div> */}
                 <button
                   onClick={() => handlePlayers(game[0])}
                   className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold rounded-xl 
@@ -225,27 +229,40 @@ const NBA = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...players.away]
                 .sort((a, b) => (b.grades?.Scoring || 0) - (a.grades?.Scoring || 0))
-                .map((player) => (
-                  <div
-                    key={player.id}
-                    className="relative bg-gradient-to-br from-gray-800 to-black p-5 rounded-xl border border-gray-700 hover:border-orange-500 transition-all duration-300 shadow-md"
-                  >
-                    <div className="absolute -top-3 -left-3 w-6 h-6 bg-orange-500 rounded-full" />
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-md" />
-                      <h4 className="text-lg font-bold text-white">{player.name}</h4>
-                    </div>
-                    <p className="text-gray-400 text-sm mb-4 font-medium">
-                      {player.position} | {player.team_name} #{player.jersey_number}
-                    </p>
-                    <Link
-                      to={`/nba/player/${player.id}`}
-                      className="block w-full px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-center"
+                .map((player) => {
+                  const headshot = importHeadshot(player.id);
+                  return (
+                    <div
+                      key={player.id}
+                      className="relative bg-gradient-to-br from-gray-800 to-black p-5 rounded-xl border border-gray-700 hover:border-orange-500 transition-all duration-300 shadow-md"
                     >
-                      View Profile
-                    </Link>
-                  </div>
-                ))}
+                      <div className="absolute -top-3 -left-3 w-6 h-6 bg-orange-500 rounded-full" />
+                      <div className="flex items-center gap-3 mb-4">
+                        {headshot ? (
+                          <img
+                            src={headshot}
+                            alt={player.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-md flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">{player.name.charAt(0)}</span>
+                          </div>
+                        )}
+                        <h4 className="text-lg font-bold text-white">{player.name}</h4>
+                      </div>
+                      <p className="text-gray-400 text-sm mb-4 font-medium">
+                        {player.position} | {player.team_name} #{player.jersey_number}
+                      </p>
+                      <Link
+                        to={`/nba/player/${player.id}`}
+                        className="block w-full px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-center"
+                      >
+                        View Profile
+                      </Link>
+                    </div>
+                  );
+                })}
             </div>
           </div>
 
@@ -265,27 +282,40 @@ const NBA = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...players.home]
                 .sort((a, b) => (b.grades?.Scoring || 0) - (a.grades?.Scoring || 0))
-                .map((player) => (
-                  <div
-                    key={player.id}
-                    className="relative bg-gradient-to-br from-gray-800 to-black p-5 rounded-xl border border-gray-700 hover:border-orange-500 transition-all duration-300 shadow-md"
-                  >
-                    <div className="absolute -top-3 -left-3 w-6 h-6 bg-orange-500 rounded-full" />
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-md" />
-                      <h4 className="text-lg font-bold text-white">{player.name}</h4>
-                    </div>
-                    <p className="text-gray-400 text-sm mb-4 font-medium">
-                      {player.position} | {player.team_name} #{player.jersey_number}
-                    </p>
-                    <Link
-                      to={`/nba/player/${player.id}`}
-                      className="block w-full px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-center"
+                .map((player) => {
+                  const headshot = importHeadshot(player.id);
+                  return (
+                    <div
+                      key={player.id}
+                      className="relative bg-gradient-to-br from-gray-800 to-black p-5 rounded-xl border border-gray-700 hover:border-orange-500 transition-all duration-300 shadow-md"
                     >
-                      View Profile
-                    </Link>
-                  </div>
-                ))}
+                      <div className="absolute -top-3 -left-3 w-6 h-6 bg-orange-500 rounded-full" />
+                      <div className="flex items-center gap-3 mb-4">
+                        {headshot ? (
+                          <img
+                            src={headshot}
+                            alt={player.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-md flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">{player.name.charAt(0)}</span>
+                          </div>
+                        )}
+                        <h4 className="text-lg font-bold text-white">{player.name}</h4>
+                      </div>
+                      <p className="text-gray-400 text-sm mb-4 font-medium">
+                        {player.position} | {player.team_name} #{player.jersey_number}
+                      </p>
+                      <Link
+                        to={`/nba/player/${player.id}`}
+                        className="block w-full px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-center"
+                      >
+                        View Profile
+                      </Link>
+                    </div>
+                  );
+                })}
             </div>
           </div>
         </section>

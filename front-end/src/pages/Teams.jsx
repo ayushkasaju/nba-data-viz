@@ -80,25 +80,24 @@ const Teams = () => {
   const westernTeams = sortedTeams("West");
 
   const renderTable = (teamsList, conference) => (
-    <div className="relative bg-gradient-to-br from-gray-800 to-black p-6 rounded-xl border border-gray-700 hover:border-orange-500 transition-all duration-300 shadow-md">
-      <div className="absolute -top-4 -left-4 w-8 h-8 bg-orange-500 rounded-full" />
-      <table className="w-full text-white">
+    <div className="overflow-x-auto rounded-lg border border-gray-700 shadow-md">
+      <table className="w-full text-white border-collapse">
         <thead>
-          <tr className="bg-gray-900/50">
+          <tr className="bg-gray-900">
             <th
-              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors"
+              className="py-3 px-4 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors text-sm border-r border-gray-700"
               onClick={() => handleSort("playoff_rank")}
             >
               Rank {sortBy === "playoff_rank" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
             <th
-              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors"
+              className="py-3 px-4 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors text-sm border-r border-gray-700"
               onClick={() => handleSort("team_name")}
             >
               Team {sortBy === "team_name" && (sortOrder === "asc" ? "↑" : "↓")}
             </th>
             <th
-              className="py-3 px-6 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors"
+              className="py-3 px-4 text-left font-semibold cursor-pointer hover:text-orange-400 transition-colors text-sm"
               onClick={() => handleSort("record")}
             >
               Record {sortBy === "record" && (sortOrder === "asc" ? "↑" : "↓")}
@@ -112,12 +111,14 @@ const Teams = () => {
               <tr
                 key={team.team_id}
                 className={`border-t border-gray-700 hover:bg-gray-700/50 transition-all duration-200 ${
-                  index % 2 === 0 ? "bg-gray-800/20" : ""
+                  index % 2 === 0 ? "bg-gray-800/30" : "bg-gray-800/10"
                 }`}
               >
-                <td className="py-4 px-6">
+                <td className="py-3 px-4 text-sm border-r border-gray-700">
                   <span className="flex items-center gap-2">
-                    {team.playoff_rank}
+                    <span className="w-6 h-6 flex items-center justify-center bg-orange-500/20 rounded-full text-orange-300 font-bold">
+                      {team.playoff_rank}
+                    </span>
                     {team.playoff_rank <= 6 && (
                       <span className="text-green-400 text-xs">✓ Playoffs</span>
                     )}
@@ -126,7 +127,7 @@ const Teams = () => {
                     )}
                   </span>
                 </td>
-                <td className="py-4 px-6">
+                <td className="py-3 px-4 text-sm border-r border-gray-700">
                   <Link
                     to={`/team/${team.team_id}`}
                     className="text-orange-400 hover:text-orange-300 transition-colors duration-200 flex items-center gap-2"
@@ -135,15 +136,17 @@ const Teams = () => {
                       <img
                         src={logoSrc}
                         alt={`${team.team_name} logo`}
-                        className={`w-6 h-6 object-contain ${team.team_id == "1610612762" ? "bg-white" : ""}`}
+                        className={`w-6 h-6 object-contain ${team.team_id === "1610612762" ? "bg-white" : ""}`}
                       />
                     ) : (
-                      <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-md" />
+                      <div className="w-6 h-6 bg-orange-500/20 rounded-full flex items-center justify-center text-orange-300">
+                        ?
+                      </div>
                     )}
                     {team.team_name}
                   </Link>
                 </td>
-                <td className="py-4 px-6">{team.record}</td>
+                <td className="py-3 px-4 text-sm">{team.record}</td>
               </tr>
             );
           })}

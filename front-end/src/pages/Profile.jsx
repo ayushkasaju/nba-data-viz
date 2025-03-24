@@ -18,6 +18,16 @@ import {
   LabelList,
 } from "recharts";
 
+// Function to dynamically import headshots from the folder
+const importHeadshot = (playerId) => {
+  try {
+    return require(`../assets/headshots/${playerId}.png`); // Adjust path based on your folder structure
+  } catch (err) {
+    console.warn(`Headshot not found for player ID: ${playerId}`);
+    return null; // Fallback if headshot is missing
+  }
+};
+
 const Profile = () => {
   const [profile, setProfile] = useState({
     player_info: [],
@@ -182,6 +192,7 @@ const Profile = () => {
   });
 
   const playerName = profile.player_info.length > 0 ? profile.player_info[0].PLAYER_FULL_NAME : "";
+  const headshot = importHeadshot(playerId); // Load headshot dynamically
   const lastXGames = profile.gamelogs.slice(-xGames);
   const vsOpponent = opponent ? profile.gamelogs.filter((game) => game.opp === opponent) : profile.gamelogs;
   const reversedTableGames = [...profile.gamelogs].reverse();
@@ -192,16 +203,16 @@ const Profile = () => {
 
   const radarColors = [
     "#FF6B00",
-    "#9333EA", 
-    "#FF4500", 
-    "#00FF00", 
-    "#FFD700", 
-    "#1E90FF", 
-    "#FF1493", 
-    "#00CED1", 
-    "#FF8C00", 
-    "#32CD32", 
-    "#4169E1", 
+    "#9333EA",
+    "#FF4500",
+    "#00FF00",
+    "#FFD700",
+    "#1E90FF",
+    "#FF1493",
+    "#00CED1",
+    "#FF8C00",
+    "#32CD32",
+    "#4169E1",
     "#FF69B4",
     "#ADFF2F",
     "#DC143C",
@@ -262,14 +273,18 @@ const Profile = () => {
       <div className="container mx-auto px-4 py-12 z-10 relative">
         {/* Header Section */}
         <div className="flex flex-col items-center mb-12">
-          {profile.player_info[0]?.PLAYER_IMAGE && (
+          {headshot ? (
             <img
-              src={profile.player_info[0].PLAYER_IMAGE}
+              src={headshot}
               alt={playerName}
               className="w-40 h-40 md:w-48 md:h-48 rounded-full border-4 border-orange-500 object-cover mb-4"
             />
+          ) : (
+            <div className="w-40 h-40 md:w-48 md:h-48 rounded-full border-4 border-orange-500 bg-gradient-to-br from-orange-500 to-red-600 mb-4 flex items-center justify-center">
+              <span className="text-white text-2xl font-bold">{playerName.charAt(0)}</span>
+            </div>
           )}
-          <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-purple-600">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-purple-600 p-2">
             {playerName}
           </h1>
           <p className="text-lg text-gray-400 mt-2">
