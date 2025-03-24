@@ -1,138 +1,155 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Cell,
-} from "recharts";
+import { useParams, useNavigate } from "react-router-dom";
 
 const TeamProfile = () => {
-  const [team, setTeam] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [teamProfile, setTeamProfile] = useState({
+    team_info: [],
+    team_players: [],
+    team_standings: [],
+  });
   const { teamId } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTeamData = async () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/team/${teamId}`, {
           method: "GET",
+          redirect: "follow",
           headers: {
             "Accept": "application/json",
-            "ngrok-skip-browser-warning": "true"
+            "ngrok-skip-browser-warning": "true",
           },
         });
         const data = await response.json();
-        setTeam(data);
-        setLoading(false);
+        setTeamProfile(data);
       } catch (error) {
         console.error("Error fetching team data:", error);
-        setLoading(false);
       }
     };
     fetchTeamData();
   }, [teamId]);
 
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload?.length) {
-      return (
-        <div className="bg-gray-800 p-3 rounded-lg border border-gray-700 text-white">
-          {payload.map((ele, index) => (
-            <div key={index}>
-              <span className="text-blue-300">{ele.name}: {ele.value}</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
+  const teamName = teamProfile.team_info.length > 0 ? teamProfile.team_info[0].TEAM_FULL_NAME : "";
+  const teamLogo = teamProfile.team_info.length > 0 ? teamProfile.team_info[0].TEAM_LOGO : null;
+
+  const handlePlayerClick = (playerId) => {
+    navigate(`/nba/player/${playerId}`);
   };
 
-  // Sample data for team performance chart (you'd typically fetch this from another endpoint)
-  const performanceData = [
-    { name: "Wins", value: team.record ? parseInt(team.record.split('-')[0]) : 0 },
-    { name: "Losses", value: team.record ? parseInt(team.record.split('-')[1]) : 0 },
-  ];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
-      <div className="container mx-auto px-4 py-8">
-        {/* Team Info Section */}
-        <section className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700 mb-12">
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="flex-1 text-center md:text-left">
-              <h1 className="text-3xl md:text-4xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
-                {team.team_name || "Team Not Found"}
-              </h1>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <p>
-                  <span className="font-semibold text-blue-300">City:</span> {team.city || "N/A"}
-                </p>
-                <p>
-                  <span className="font-semibold text-blue-300">Arena:</span> {team.arena || "N/A"}
-                </p>
-                <p>
-                  <span className="font-semibold text-blue-300">Owner:</span> {team.owner || "N/A"}
-                </p>
-                <p>
-                  <span className="font-semibold text-blue-300">General Manager:</span> {team.general_manager || "N/A"}
-                </p>
-                <p>
-                  <span className="font-semibold text-blue-300">Head Coach:</span> {team.head_coach || "N/A"}
-                </p>
-                <p>
-                  <span className="font-semibold text-blue-300">Conference:</span> {team.conference || "N/A"}
-                </p>
-                <p>
-                  <span className="font-semibold text-blue-300">Record:</span> {team.record || "N/A"}
-                </p>
-                <p>
-                  <span className="font-semibold text-blue-300">Playoff Rank:</span> {team.playoff_rank || "N/A"}
-                </p>
+    <div className="min-h-screen bg-black text-white relative overflow-hidden font-sans">
+      {/* Background Layers */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-800 z-0" />
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PHBhdHRlcm4gaWQ9ImEiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSJ0cmFuc3BhcmVudCI+PC9yZWN0PjxjaXJjbGUgY3g9IjUiIGN5PSI1IiByPSIxLjUiIGZpbGw9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4xKSI+PC9jaXJjbGU+PC9wYXR0ZXJuPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjYSkiPjwvcmVjdD48L3N2Zz4=')] opacity-20" />
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-12 z-10 relative">
+        {/* Header Section */}
+        <div className="flex flex-col items-center mb-12">
+          {teamLogo && (
+            <img
+              src={teamLogo}
+              alt={teamName}
+              className="w-40 h-40 md:w-48 md:h-48 rounded-full border-4 border-orange-500 object-cover mb-4"
+            />
+          )}
+          <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-purple-600">
+            {teamName}
+          </h1>
+          <p className="text-lg text-gray-400 mt-2">
+            {teamProfile.team_info[0]?.CITY || "N/A"} • {teamProfile.team_standings[0]?.Conference || "N/A"}
+          </p>
+        </div>
+
+        {/* Main Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Left Column: Team Overview */}
+          <div className="lg:col-span-1 space-y-8">
+            {/* Team Details */}
+            <div className="p-6 rounded-xl border border-gray-700 shadow-md bg-gray-800/20">
+              <h2 className="text-xl font-semibold mb-4 text-orange-400 border-b border-orange-500 pb-2">
+                Team Info
+              </h2>
+              <dl className="space-y-4">
+                {[
+                  { label: "Arena", value: teamProfile.team_info[0]?.ARENA || "N/A" },
+                  { label: "Owner", value: teamProfile.team_info[0]?.OWNER || "N/A" },
+                  { label: "General Manager", value: teamProfile.team_info[0]?.GENERALMANAGER || "N/A" },
+                  { label: "Head Coach", value: teamProfile.team_info[0]?.HEADCOACH || "N/A" },
+                  { label: "Founded", value: teamProfile.team_info[0]?.YEARFOUNDED || "N/A" },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex flex-col">
+                    <dt className="text-sm font-semibold text-orange-400 uppercase tracking-wide">
+                      {label}
+                    </dt>
+                    <dd className="text-base text-gray-200">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="p-6 rounded-xl border border-gray-700 shadow-md bg-gray-800/20">
+              <h2 className="text-xl font-semibold mb-4 text-orange-400 border-b border-orange-500 pb-2">
+                Quick Stats
+              </h2>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-orange-400 font-medium">Record</span>
+                  <span className="text-gray-200">{teamProfile.team_standings[0]?.Record || "N/A"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-orange-400 font-medium">Conference</span>
+                  <span className="text-gray-200">{teamProfile.team_standings[0]?.Conference || "N/A"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-orange-400 font-medium">Playoff Rank</span>
+                  <span className="text-gray-200">{teamProfile.team_standings[0]?.PlayoffRank || "N/A"}</span>
+                </div>
               </div>
             </div>
           </div>
-        </section>
 
-        {/* Performance Chart Section */}
-        <section className="mb-12">
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
-            <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
-              Season Performance
-            </h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={performanceData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
-                <XAxis dataKey="name" stroke="#fff" tick={{ fontSize: 12 }} />
-                <YAxis stroke="#fff" tick={{ fontSize: 12 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                  {performanceData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.name === "Wins" ? "#00DF4C" : "#FF4747"}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          {/* Right Column: Roster and Additional Content */}
+          <div className="lg:col-span-3 space-y-8">
+            {/* Team Roster */}
+            <div className="p-6 rounded-xl border border-gray-700 shadow-md">
+              <h2 className="text-xl font-semibold mb-4 text-orange-400 border-b border-orange-500 pb-2">
+                Team Roster
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto pr-2">
+                {teamProfile.team_players.map((player) => (
+                  <div
+                    key={player.PLAYER_ID}
+                    onClick={() => handlePlayerClick(player.PLAYER_ID)}
+                    className="p-4 rounded-lg bg-gray-800/50 hover:bg-orange-500/20 transition-colors cursor-pointer flex items-center justify-between"
+                  >
+                    <div>
+                      <span className="font-semibold text-orange-400">{player.PLAYER_FULL_NAME}</span>
+                      <span className="block text-sm text-gray-300">{player.POSITION || "N/A"}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Games Placeholder */}
+            <div className="p-6 rounded-xl border border-gray-700 shadow-md">
+              <h2 className="text-xl font-semibold mb-4 text-orange-400 border-b border-orange-500 pb-2">
+                Recent Games
+              </h2>
+              <div className="text-center text-gray-400">
+                <p>Game history coming soon...</p>
+                <div className="mt-4 space-y-2">
+                  <div className="h-12 bg-gray-700/30 rounded-lg animate-pulse" />
+                  <div className="h-12 bg-gray-700/30 rounded-lg animate-pulse" />
+                  <div className="h-12 bg-gray-700/30 rounded-lg animate-pulse" />
+                </div>
+              </div>
+            </div>
           </div>
-        </section>
-
-        {/* Additional Team Stats could go here */}
-        {/* You could add more sections for roster, recent games, etc. */}
+        </div>
       </div>
     </div>
   );

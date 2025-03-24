@@ -752,7 +752,7 @@ def gamePlayers(gameId):
 def nbaPlayerInfo(playerId):
     player_info = (pd.read_sql(f"SELECT * FROM players WHERE Player_ID = {playerId}", con=db)).to_dict(orient='records')
     player_log = pd.read_sql(f"SELECT *, STR_TO_DATE(GAME_DATE, '%M %d, %Y') AS formatted_date FROM gamelogs WHERE Player_ID = {playerId} ORDER BY formatted_date ASC", con=db)
-    player_grades = (pd.read_sql(f"SELECT PTS, REB, AST, STL, BLK, TOV, Scoring, Playmaking, Rebounding, Defense, Athleticism FROM grades WHERE Player_ID = {playerId}", con=db)).to_dict(orient='records')
+    player_grades = (pd.read_sql(f"SELECT PTS, REB, AST, STL, BLK, TOV, Scoring, Playmaking, Rebounding, Defense, Athleticism, Archetype FROM grades WHERE Player_ID = {playerId}", con=db)).to_dict(orient='records')
 
 
     gamelogs = []
@@ -799,6 +799,20 @@ def nbaPlayerInfo(playerId):
     }
 
     return jsonify(player_profile)
+
+@app.route('/team/<teamId>')
+def teamInfo(teamId):
+    team_info = (pd.read_sql(f"SELECT * FROM teams WHERE TEAM_ID = {teamId}", con=db)).to_dict(orient='records')
+    team_players = (pd.read_sql(f"SELECT * FROM players WHERE Team_ID = {teamId}", con=db)).to_dict(orient='records')
+    team_standings = (pd.read_sql(f"SELECT * FROM standings WHERE TeamID = {teamId}", con=db)).to_dict(orient='records')
+
+    team_profile = {
+        'team_info': team_info,
+        'team_players': team_players,
+        'team_standings': team_standings
+    }
+
+    return jsonify(team_profile)
 
 if __name__ == '__main__':
     # fetchPlayers()

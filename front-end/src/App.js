@@ -28,7 +28,7 @@ const App = () => {
             <Route exact path ='/' Component={Home}/>
             <Route path='/games' Component={NBA}/>
             <Route path='/teams' element={<Teams/>}/>
-            <Route path='/teams/:teamId' Component={TeamProfile}/>
+            <Route path='/team/:teamId' Component={TeamProfile}/>
             <Route path='/players' Component={Players}/>
             <Route path="/:sport/player/:playerId" Component={Profile}/>
           </Routes>

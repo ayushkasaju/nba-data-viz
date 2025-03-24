@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   ResponsiveContainer,
   BarChart,
@@ -42,6 +42,7 @@ const Profile = () => {
   const [rowsPerPage] = useState(10);
 
   const { sport, playerId } = useParams();
+  const navigate = useNavigate();
 
   const statCategories = [
     { key: "pts", label: "Points" },
@@ -154,7 +155,7 @@ const Profile = () => {
       const game = payload[0]?.payload;
       const statLabel = statCategories.find((stat) => stat.key === selectedStat)?.label || selectedStat;
       return (
-        <div className="bg-gradient-to-br from-gray-800 to-black p-2 sm:p-3 rounded-xl border border-gray-700 text-white text-xs sm:text-sm shadow-md">
+        <div className="bg-gray-800 p-3 rounded-xl border border-gray-700 text-white text-sm shadow-md">
           <span>{game?.game_date || "Date not available"}</span>
           <br />
           <span>{game?.opp ? `vs. ${game.opp}` : "Opponent not available"}</span>
@@ -189,8 +190,24 @@ const Profile = () => {
   const currentRows = reversedTableGames.slice(indexOfFirstRow, indexOfLastRow);
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  const radarColors = ["#FF6B00", "#FF6B6B", "#4ECDC4", "#FFD93D", "#95E1D3"]; // Updated to orange-first palette
-
+  const radarColors = [
+    "#FF6B00",
+    "#9333EA", 
+    "#FF4500", 
+    "#00FF00", 
+    "#FFD700", 
+    "#1E90FF", 
+    "#FF1493", 
+    "#00CED1", 
+    "#FF8C00", 
+    "#32CD32", 
+    "#4169E1", 
+    "#FF69B4",
+    "#ADFF2F",
+    "#DC143C",
+    "#00B7EB",
+    "#FFA500",
+  ];
   const filteredPlayers = allPlayers
     .filter(
       (player) =>
@@ -227,443 +244,522 @@ const Profile = () => {
   const totalGames = filteredGames.length;
   const percentageOver = totalGames > 0 ? ((gamesOverThreshold / totalGames) * 100).toFixed(1) : 0;
 
+  const handleTeamClick = (teamId) => {
+    navigate(`/team/${teamId}`);
+  };
+
+  const handleTeammateClick = (teammateId) => {
+    navigate(`/player/${teammateId}`);
+  };
+
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden font-sans">
-      {/* Simplified Background */}
+      {/* Background Layers */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-800 z-0" />
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PHBhdHRlcm4gaWQ9ImEiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSJ0cmFuc3BhcmVudCI+PC9yZWN0PjxjaXJjbGUgY3g9IjUiIGN5PSI1IiByPSIxLjUiIGZpbGw9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4xKSI+PC9jaXJjbGU+PC9wYXR0ZXJuPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjYSkiPjwvcmVjdD48L3N2Zz4=')] opacity-20" />
 
-      <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8 z-10 relative">
-        {/* Bio and Radar Section */}
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-12">
-          <div className="relative  p-4 sm:p-6 rounded-xl border border-gray-700 shadow-md">
-            <div className="absolute -top-4 -left-4 w-8 h-8 bg-orange-500 rounded-full" />
-            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-              {profile.player_info[0]?.PLAYER_IMAGE && (
-                <div className="relative flex-shrink-0">
-                  <img
-                    src={profile.player_info[0].PLAYER_IMAGE}
-                    alt={playerName}
-                    className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full border-4 border-orange-500 object-cover transition-transform duration-300"
-                  />
-                </div>
-              )}
-              <div className="flex-1 text-center sm:text-left">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3 sm:mb-4 text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-purple-600">
-                  {playerName}
-                </h1>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6">
-                  <p className="text-sm sm:text-base">
-                    <span className="font-semibold text-orange-400">Team:</span>{" "}
-                    {profile.player_info[0]?.TEAM_FULL_NAME || "N/A"}
-                  </p>
-                  <p className="text-sm sm:text-base">
-                    <span className="font-semibold text-orange-400">Position:</span>{" "}
-                    {profile.player_info[0]?.POSITION || "N/A"}
-                  </p>
-                  <p className="text-sm sm:text-base">
-                    <span className="font-semibold text-orange-400">Height:</span>{" "}
-                    {profile.player_info[0]?.HEIGHT || "N/A"}
-                  </p>
-                  <p className="text-sm sm:text-base">
-                    <span className="font-semibold text-orange-400">Weight:</span>{" "}
-                    {profile.player_info[0]?.WEIGHT || "N/A"}
-                  </p>
-                  {profile.player_info[0]?.DRAFT_YEAR !== 0 && (
-                    <p className="text-sm sm:text-base">
-                      <span className="font-semibold text-orange-400">Draft:</span>{" "}
-                      {profile.player_info[0]?.DRAFT_YEAR} Round {profile.player_info[0]?.DRAFT_ROUND} Pick{" "}
-                      {profile.player_info[0]?.DRAFT_NUMBER}
-                    </p>
-                  )}
-                  <p className="text-sm sm:text-base">
-                    <span className="font-semibold text-orange-400">Archetype:</span>{" "}
-                    {profile.player_grades[0]?.Archetype || "N/A"}
-                  </p>
-                </div>
-                <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">
-                  Season Averages
-                </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                  {["PTS", "REB", "AST", "BLK", "STL", "TOV"].map((stat) => (
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-12 z-10 relative">
+        {/* Header Section */}
+        <div className="flex flex-col items-center mb-12">
+          {profile.player_info[0]?.PLAYER_IMAGE && (
+            <img
+              src={profile.player_info[0].PLAYER_IMAGE}
+              alt={playerName}
+              className="w-40 h-40 md:w-48 md:h-48 rounded-full border-4 border-orange-500 object-cover mb-4"
+            />
+          )}
+          <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-purple-600">
+            {playerName}
+          </h1>
+          <p className="text-lg text-gray-400 mt-2">
+            <span
+              onClick={() => handleTeamClick(profile.player_info[0]?.TEAM_ID)}
+              className="cursor-pointer hover:text-orange-400 transition-colors"
+            >
+              {profile.player_info[0]?.TEAM_FULL_NAME || "N/A"}
+            </span>{" "}
+            • {profile.player_info[0]?.POSITION || "N/A"}
+          </p>
+        </div>
+
+        {/* Main Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Left Column: Player Overview */}
+          <div className="lg:col-span-1 space-y-8">
+            {/* Player Info */}
+            <div className="p-6 rounded-xl border border-gray-700 shadow-md bg-gray-800/20">
+              <h2 className="text-xl font-semibold mb-4 text-orange-400 border-b border-orange-500 pb-2">
+                Player Info
+              </h2>
+              <dl className="space-y-4">
+                {[
+                  { label: "Height", value: profile.player_info[0]?.HEIGHT || "N/A" },
+                  { label: "Weight", value: profile.player_info[0]?.WEIGHT || "N/A" },
+                  {
+                    label: "Draft",
+                    value:
+                      profile.player_info[0]?.DRAFT_YEAR !== 0
+                        ? `${profile.player_info[0]?.DRAFT_YEAR} R${profile.player_info[0]?.DRAFT_ROUND} P${profile.player_info[0]?.DRAFT_NUMBER}`
+                        : "Undrafted",
+                  },
+                  { label: "Archetype", value: profile.player_grades[0]?.Archetype || "N/A" },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex flex-col">
+                    <dt className="text-sm font-semibold text-orange-400 uppercase tracking-wide">{label}</dt>
+                    <dd className="text-base text-gray-200">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            {/* Season Averages */}
+            <div className="p-6 rounded-xl border border-gray-700 shadow-md bg-gray-800/20">
+              <h2 className="text-xl font-semibold mb-4 text-orange-400 border-b border-orange-500 pb-2">
+                Season Averages
+              </h2>
+              <div className="space-y-4">
+                {[
+                  { label: "Points", value: profile.player_grades[0]?.PTS || "N/A" },
+                  { label: "Rebounds", value: profile.player_grades[0]?.REB || "N/A" },
+                  { label: "Assists", value: profile.player_grades[0]?.AST || "N/A" },
+                  { label: "Blocks", value: profile.player_grades[0]?.BLK || "N/A" },
+                  { label: "Steals", value: profile.player_grades[0]?.STL || "N/A" },
+                  { label: "Turnovers", value: profile.player_grades[0]?.TOV || "N/A" },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex justify-between items-center">
+                    <span className="text-orange-400 font-medium">{label}</span>
+                    <span className="text-gray-200">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Teammates Navigation */}
+            <div className="p-6 rounded-xl border border-gray-700 shadow-md bg-gray-800/20">
+              <h2 className="text-xl font-semibold mb-4 text-orange-400 border-b border-orange-500 pb-2">
+                Teammates
+              </h2>
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {teammates
+                  .filter((teammate) => teammate.player_id !== playerId) // Exclude current player
+                  .map((teammate) => (
                     <div
-                      key={stat}
-                      className="p-2 rounded-xl bg-gray-800/50 hover:bg-orange-500/20 transition-colors text-xs sm:text-sm"
+                      key={teammate.player_id}
+                      onClick={() => handleTeammateClick(teammate.player_id)}
+                      className="p-3 rounded-lg bg-gray-800/50 hover:bg-orange-500/20 transition-colors cursor-pointer flex items-center justify-between"
                     >
-                      <span className="font-semibold text-orange-400">{stat}:</span>{" "}
-                      {profile.player_grades[0]?.[stat] || "N/A"}
+                      <span className="font-semibold">{teammate.player_name}</span>
                     </div>
                   ))}
-                </div>
               </div>
             </div>
           </div>
-          {profile.player_grades[0] && (
-            <div className="relative  p-4 sm:p-6 rounded-xl border border-gray-700 shadow-md flex flex-col items-center justify-start">
-              <div className="absolute -top-4 -left-4 w-8 h-8 bg-orange-500 rounded-full" />
-              <div className="w-full max-w-xs mb-4 relative">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Compare players..."
-                  className="w-full bg-black border border-gray-700 rounded-xl p-2 text-sm focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md"
-                />
-                {searchTerm && (
-                  <div className="absolute z-20 bg-black border border-gray-700 rounded-xl mt-1 max-h-40 overflow-y-auto w-full max-w-xs shadow-md">
-                    {filteredPlayers.map((player) => (
-                      <div
-                        key={player.player_id}
-                        onClick={() => handlePlayerSelect(player.player_id)}
-                        className="p-2 hover:bg-gray-700 cursor-pointer text-sm text-white transition-all duration-200"
-                      >
-                        {player.player_name}
+
+          {/* Right Column: Charts and Game Logs */}
+          <div className="lg:col-span-3 space-y-8">
+            {/* Radar Chart and Comparison */}
+            {profile.player_grades[0] && (
+              <div className="p-6 rounded-xl border border-gray-700 shadow-md">
+                <h2 className="text-xl font-semibold mb-4 text-orange-400 border-b border-orange-500 pb-2">
+                  Player Comparison
+                </h2>
+                <div className="flex flex-col items-center">
+                  <div className="w-full max-w-md mb-4">
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Compare up to 5 players..."
+                      className="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-sm focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md"
+                    />
+                    {searchTerm && (
+                      <div className="absolute z-20 bg-gray-900 border border-gray-700 rounded-xl mt-1 max-h-40 overflow-y-auto w-full max-w-md shadow-md">
+                        {filteredPlayers.map((player) => (
+                          <div
+                            key={player.player_id}
+                            onClick={() => handlePlayerSelect(player.player_id)}
+                            className="p-2 hover:bg-gray-700 cursor-pointer text-sm text-white transition-all duration-200"
+                          >
+                            {player.player_name}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                )}
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {radarPlayers.map((playerId, index) => (
-                    <div
-                      key={playerId}
-                      className="flex items-center bg-gray-900/50 rounded-xl px-2 py-1 text-xs border"
-                      style={{ borderColor: radarColors[(index + 1) % radarColors.length] }}
-                    >
-                      {radarPlayerProfiles[playerId]?.player_info[0]?.PLAYER_FULL_NAME || "Loading..."}
-                      <button
-                        onClick={() => removeRadarPlayer(playerId)}
-                        className="ml-2 text-orange-400 hover:text-orange-300"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <ResponsiveContainer width="100%" height={radarPlayers.length > 0 ? 400 : 350} className="min-w-[200px]">
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                  <PolarGrid stroke="#4B5563" />
-                  <PolarRadiusAxis domain={[0, 100]} stroke="none" />
-                  <PolarAngleAxis dataKey="stat" tick={{ fill: "#fff", fontSize: 12 }} />
-                  <Radar
-                    name={playerName}
-                    dataKey={playerId}
-                    stroke={radarColors[0]}
-                    strokeWidth={2}
-                    fill={radarColors[0]}
-                    fillOpacity={0.4}
-                  >
-                    {radarPlayers.length === 0 && (
-                      <LabelList
-                        dataKey={playerId}
-                        position="outside"
-                        content={({ x, y, value }) => {
-                          const color =
-                            value <= 45 ? "#FF4242" : value >= 65 && value < 80 ? "#35E16F" : value >= 80 ? "#FF6B00" : "#FFC822";
-                          return (
-                            <>
-                              <rect x={x - 16} y={y - 10} width={32} height={20} fill={color} rx={4} />
-                              <text x={x} y={y} fill="white" fontSize={12} textAnchor="middle" alignmentBaseline="middle">
-                                {value}
-                              </text>
-                            </>
-                          );
-                        }}
-                      />
                     )}
-                  </Radar>
-                  {radarPlayers.map((playerId, index) => {
-                    const playerName = radarPlayerProfiles[playerId]?.player_info[0]?.PLAYER_FULL_NAME || "Player";
-                    return (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {radarPlayers.map((playerId, index) => (
+                        <div
+                          key={playerId}
+                          className="flex items-center bg-gray-900/50 rounded-xl px-2 py-1 text-xs border"
+                          style={{ borderColor: radarColors[(index + 1) % radarColors.length] }}
+                        >
+                          {radarPlayerProfiles[playerId]?.player_info[0]?.PLAYER_FULL_NAME || "Loading..."}
+                          <button
+                            onClick={() => removeRadarPlayer(playerId)}
+                            className="ml-2 text-orange-400 hover:text-orange-300"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <ResponsiveContainer width="100%" height={radarPlayers.length > 0 ? 400 : 350}>
+                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                      <PolarGrid stroke="#4B5563" />
+                      <PolarRadiusAxis domain={[0, 100]} stroke="none" />
+                      <PolarAngleAxis dataKey="stat" tick={{ fill: "#fff", fontSize: 12 }} />
                       <Radar
-                        key={playerId}
                         name={playerName}
                         dataKey={playerId}
-                        stroke={radarColors[(index + 1) % radarColors.length]}
+                        stroke={radarColors[0]}
                         strokeWidth={2}
-                        fill={radarColors[(index + 1) % radarColors.length]}
-                        fillOpacity={0.2}
-                      />
-                    );
-                  })}
-                </RadarChart>
-              </ResponsiveContainer>
-              {radarPlayers.length > 0 && (
-                <div className="mt-4 w-full max-w-md">
-                  <table className="w-full text-xs sm:text-sm text-left">
-                    <thead className="bg-gray-900/50">
-                      <tr>
-                        <th className="p-2">Player</th>
-                        {radarCategories.map((stat) => (
-                          <th key={stat} className="p-2 text-center">
-                            {stat.slice(0, 3)}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-t border-gray-700">
-                        <td className="p-2 flex items-center">
-                          <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: radarColors[0] }}></span>
-                          {playerName}
-                        </td>
-                        {radarCategories.map((stat) => (
-                          <td key={stat} className="p-2 text-center">
-                            {(profile.player_grades[0]?.[stat] || 0).toFixed(1)}
-                          </td>
-                        ))}
-                      </tr>
-                      {radarPlayers.map((playerId, index) => (
-                        <tr key={playerId} className="border-t border-gray-700">
-                          <td className="p-2 flex items-center">
-                            <span
-                              className="w-3 h-3 rounded-full mr-2"
-                              style={{ backgroundColor: radarColors[(index + 1) % radarColors.length] }}
-                            ></span>
-                            {radarPlayerProfiles[playerId]?.player_info[0]?.PLAYER_FULL_NAME || "Loading..."}
-                          </td>
-                          {radarCategories.map((stat) => (
-                            <td key={stat} className="p-2 text-center">
-                              {(radarPlayerProfiles[playerId]?.player_grades[0]?.[stat] || 0).toFixed(1)}
+                        fill={radarColors[0]}
+                        fillOpacity={0.4}
+                      >
+                        {radarPlayers.length === 0 && (
+                          <LabelList
+                            dataKey={playerId}
+                            position="outside"
+                            content={({ x, y, value }) => {
+                              const color =
+                                value <= 45
+                                  ? "#FF2F2F"
+                                  : value >= 65 && value < 80
+                                  ? "#1CDA5C"
+                                  : value >= 80
+                                  ? "#354BFE"
+                                  : "#FFC516";
+                              return (
+                                <>
+                                  <rect x={x - 16} y={y - 10} width={32} height={20} fill={color} rx={4} />
+                                  <text
+                                    x={x}
+                                    y={y}
+                                    fill="white"
+                                    fontSize={12}
+                                    textAnchor="middle"
+                                    alignmentBaseline="middle"
+                                  >
+                                    {value}
+                                  </text>
+                                </>
+                              );
+                            }}
+                          />
+                        )}
+                      </Radar>
+                      {radarPlayers.map((playerId, index) => {
+                        const playerName =
+                          radarPlayerProfiles[playerId]?.player_info[0]?.PLAYER_FULL_NAME || "Player";
+                        return (
+                          <Radar
+                            key={playerId}
+                            name={playerName}
+                            dataKey={playerId}
+                            stroke={radarColors[(index + 1) % radarColors.length]}
+                            strokeWidth={2}
+                            fill={radarColors[(index + 1) % radarColors.length]}
+                            fillOpacity={0.2}
+                          />
+                        );
+                      })}
+                    </RadarChart>
+                  </ResponsiveContainer>
+                  {radarPlayers.length > 0 && (
+                    <div className="mt-4 w-full">
+                      <table className="w-full text-sm text-left">
+                        <thead className="bg-gray-900/50">
+                          <tr>
+                            <th className="p-2">Player</th>
+                            {radarCategories.map((stat) => (
+                              <th key={stat} className="p-2 text-center">
+                                {stat.slice(0, 3)}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-t border-gray-700">
+                            <td className="p-2 flex items-center">
+                              <span
+                                className="w-3 h-3 rounded-full mr-2"
+                                style={{ backgroundColor: radarColors[0] }}
+                              ></span>
+                              {playerName}
                             </td>
+                            {radarCategories.map((stat) => (
+                              <td key={stat} className="p-2 text-center">
+                                {(profile.player_grades[0]?.[stat] || 0).toFixed(1)}
+                              </td>
+                            ))}
+                          </tr>
+                          {radarPlayers.map((playerId, index) => (
+                            <tr key={playerId} className="border-t border-gray-700">
+                              <td className="p-2 flex items-center">
+                                <span
+                                  className="w-3 h-3 rounded-full mr-2"
+                                  style={{ backgroundColor: radarColors[(index + 1) % radarColors.length] }}
+                                ></span>
+                                {radarPlayerProfiles[playerId]?.player_info[0]?.PLAYER_FULL_NAME || "Loading..."}
+                              </td>
+                              {radarCategories.map((stat) => (
+                                <td key={stat} className="p-2 text-center">
+                                  {(radarPlayerProfiles[playerId]?.player_grades[0]?.[stat] || 0).toFixed(1)}
+                                </td>
+                              ))}
+                            </tr>
                           ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-
-        {/* Filters and Chart Section */}
-        <section className="mb-8 sm:mb-12">
-          <div className="relative  p-4 sm:p-6 rounded-xl border border-gray-700 shadow-md mb-4 sm:mb-6">
-            <div className="absolute -top-4 -left-4 w-8 h-8 bg-orange-500 rounded-full" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-              <input
-                type="number"
-                step="0.5"
-                value={thresholdValue}
-                onChange={(e) => setThresholdValue(parseFloat(e.target.value))}
-                className="bg-black border border-gray-700 rounded-xl p-2 text-center text-sm sm:text-base focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md w-full"
-                placeholder="Threshold"
-              />
-              <select
-                value={xGames}
-                onChange={(e) => setXGames(Number(e.target.value))}
-                className="bg-black border border-gray-700 rounded-xl p-2 text-sm sm:text-base focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md w-full"
-              >
-                <option value="all">Season</option>
-                {[30, 20, 15, 10, 5].map((n) => (
-                  <option key={n} value={n}>
-                    {n} games
-                  </option>
-                ))}
-              </select>
-              <select
-                value={opponent || ""}
-                onChange={(e) => setOpponent(e.target.value || null)}
-                className="bg-black border border-gray-700 rounded-xl p-2 text-sm sm:text-base focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md w-full"
-              >
-                <option value="">All Opponents</option>
-                {[
-                  "ATL",
-                  "BKN",
-                  "BOS",
-                  "CHA",
-                  "CHI",
-                  "CLE",
-                  "DAL",
-                  "DEN",
-                  "DET",
-                  "GSW",
-                  "HOU",
-                  "IND",
-                  "LAC",
-                  "LAL",
-                  "MEM",
-                  "MIA",
-                  "MIL",
-                  "MIN",
-                  "NOP",
-                  "NYK",
-                  "OKC",
-                  "ORL",
-                  "PHI",
-                  "PHX",
-                  "POR",
-                  "SAS",
-                  "SAC",
-                  "TOR",
-                  "UTA",
-                  "WAS",
-                ].map((team) => (
-                  <option key={team} value={team}>
-                    {team}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={minutes || ""}
-                onChange={(e) => setMinutes(e.target.value ? Number(e.target.value) : null)}
-                className="bg-black border border-gray-700 rounded-xl p-2 text-sm sm:text-base focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md w-full"
-              >
-                <option value="">All Minutes</option>
-                {[10, 20, 25, 28, 30, 32, 34, 40].map((m) => (
-                  <option key={m} value={m}>
-                    {m}+ Minutes
-                  </option>
-                ))}
-              </select>
-              <select
-                value={winLoss || ""}
-                onChange={(e) => setWinLoss(e.target.value || null)}
-                className="bg-black border border-gray-700 rounded-xl p-2 text-sm sm:text-base focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md w-full"
-              >
-                <option value="">All Games</option>
-                <option value="W">Wins Only</option>
-                <option value="L">Losses Only</option>
-              </select>
-              <select
-                value={selectedTeammate || ""}
-                onChange={(e) => setSelectedTeammate(e.target.value || null)}
-                className="bg-black border border-gray-700 rounded-xl p-2 text-sm sm:text-base focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md w-full"
-              >
-                <option value="">Select Teammate</option>
-                {teammates.map((teammate) => (
-                  <option key={teammate.player_id} value={teammate.player_id}>
-                    {teammate.player_name}
-                  </option>
-                ))}
-              </select>
-              {selectedTeammate && (
-                <select
-                  value={filterTeammate || ""}
-                  onChange={(e) => setFilterTeammate(e.target.value || null)}
-                  className="bg-black border border-gray-700 rounded-xl p-2 text-sm sm:text-base focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md w-full"
-                >
-                  <option value="">All Games</option>
-                  <option value="with">With Teammate</option>
-                  <option value="without">Without Teammate</option>
-                </select>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-wrap justify-center gap-2 mb-4 sm:mb-6">
-            {statCategories.map((stat) => (
-              <button
-                key={stat.key}
-                onClick={() => setSelectedStat(stat.key)}
-                className={`px-2 py-1 sm:px-3 sm:py-1 rounded-xl font-medium text-xs sm:text-sm transition-all duration-300 ${
-                  selectedStat === stat.key
-                    ? "bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-md"
-                    : " border border-gray-700 text-gray-300 hover:border-orange-500 hover:text-orange-400"
-                }`}
-              >
-                {stat.label}
-              </button>
-            ))}
-          </div>
-          <div className="relative  p-4 sm:p-6 rounded-xl border border-gray-700 shadow-md">
-            <div className="absolute -top-4 -left-4 w-8 h-8 bg-orange-500 rounded-full" />
-            <ResponsiveContainer width="100%" height={300} className="min-w-[300px]">
-              <BarChart data={filteredGames} margin={{ top: 15, right: 20, left: -10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
-                <XAxis dataKey="game_date" stroke="#fff" tick={{ fontSize: 10 }} />
-                <YAxis stroke="#fff" tick={{ fontSize: 10 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey={selectedStat} radius={[6, 6, 0, 0]}>
-                  {filteredGames.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={
-                        entry[selectedStat] < thresholdValue
-                          ? "#FF4747"
-                          : entry[selectedStat] > thresholdValue
-                          ? "#00DF4C"
-                          : "#8C8C89"
-                      }
-                    />
-                  ))}
-                </Bar>
-                <ReferenceLine y={thresholdValue} stroke="#fff" strokeDasharray="5 5" />
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="text-center mt-2 text-sm text-gray-400">
-              Over {thresholdValue} {statCategories.find((stat) => stat.key === selectedStat)?.label || selectedStat} in{" "}
-              {gamesOverThreshold} of {totalGames} games ({percentageOver}%)
-            </div>
-          </div>
-        </section>
-
-        {/* Game Logs Section */}
-        <section className="relative  p-4 sm:p-6 rounded-xl border border-gray-700 shadow-md">
-          <div className="absolute -top-4 -left-4 w-8 h-8 bg-orange-500 rounded-full" />
-          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">
-            Game Logs
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs sm:text-sm text-left min-w-[600px]">
-              <thead className="bg-gray-900/50">
-                <tr>
-                  {["Date", "Matchup", "W/L", "Mins", "FG", "FG%", "3PT", "3PT%", "FT", "FT%", "Reb", "Ast", "Blk", "Stl", "PF", "Pts"].map(
-                    (header) => (
-                      <th key={header} className="p-2 sm:p-3 font-semibold">
-                        {header}
-                      </th>
-                    )
+                        </tbody>
+                      </table>
+                    </div>
                   )}
-                </tr>
-              </thead>
-              <tbody>
-                {currentRows.map((game, index) => (
-                  <tr key={index} className="border-t border-gray-700 hover:bg-gray-700/50 transition-colors">
-                    <td className="p-2 sm:p-3">{game.game_date}</td>
-                    <td className="p-2 sm:p-3">{game.matchup}</td>
-                    <td className="p-2 sm:p-3">{game.outcome}</td>
-                    <td className="p-2 sm:p-3">{game.mins_played}</td>
-                    <td className="p-2 sm:p-3">
-                      {game.fg_made}-{game.fg_att}
-                    </td>
-                    <td className="p-2 sm:p-3">{`${Math.round(game.fg_pct * 10000) / 100}%`}</td>
-                    <td className="p-2 sm:p-3">
-                      {game.fg3_made}-{game.fg3_att}
-                    </td>
-                    <td className="p-2 sm:p-3">{`${Math.round(game.fg3_pct * 10000) / 100}%`}</td>
-                    <td className="p-2 sm:p-3">
-                      {game.ft_made}-{game.ft_att}
-                    </td>
-                    <td className="p-2 sm:p-3">{`${Math.round(game.ft_pct * 10000) / 100}%`}</td>
-                    <td className="p-2 sm:p-3">{game.reb}</td>
-                    <td className="p-2 sm:p-3">{game.ast}</td>
-                    <td className="p-2 sm:p-3">{game.blk}</td>
-                    <td className="p-2 sm:p-3">{game.stl}</td>
-                    <td className="p-2 sm:p-3">{game.foul}</td>
-                    <td className="p-2 sm:p-3">{game.pts}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                </div>
+              </div>
+            )}
+
+            {/* Filters and Bar Chart */}
+            <div className="p-6 rounded-xl border border-gray-700 shadow-md">
+              <h2 className="text-xl font-semibold mb-4 text-orange-400 border-b border-orange-500 pb-2">
+                Performance Trends
+              </h2>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={thresholdValue}
+                    onChange={(e) => setThresholdValue(parseFloat(e.target.value))}
+                    className="bg-gray-900 border border-gray-700 rounded-xl p-2 text-center text-sm focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md w-full"
+                    placeholder="Threshold"
+                  />
+                  <select
+                    value={xGames}
+                    onChange={(e) => setXGames(Number(e.target.value))}
+                    className="bg-gray-900 border border-gray-700 rounded-xl p-2 text-sm focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md w-full"
+                  >
+                    <option value="all">Season</option>
+                    {[30, 20, 15, 10, 5].map((n) => (
+                      <option key={n} value={n}>
+                        {n} games
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={opponent || ""}
+                    onChange={(e) => setOpponent(e.target.value || null)}
+                    className="bg-gray-900 border border-gray-700 rounded-xl p-2 text-sm focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md w-full"
+                  >
+                    <option value="">All Opponents</option>
+                    {[
+                      "ATL",
+                      "BKN",
+                      "BOS",
+                      "CHA",
+                      "CHI",
+                      "CLE",
+                      "DAL",
+                      "DEN",
+                      "DET",
+                      "GSW",
+                      "HOU",
+                      "IND",
+                      "LAC",
+                      "LAL",
+                      "MEM",
+                      "MIA",
+                      "MIL",
+                      "MIN",
+                      "NOP",
+                      "NYK",
+                      "OKC",
+                      "ORL",
+                      "PHI",
+                      "PHX",
+                      "POR",
+                      "SAS",
+                      "SAC",
+                      "TOR",
+                      "UTA",
+                      "WAS",
+                    ].map((team) => (
+                      <option key={team} value={team}>
+                        {team}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={minutes || ""}
+                    onChange={(e) => setMinutes(e.target.value ? Number(e.target.value) : null)}
+                    className="bg-gray-900 border border-gray-700 rounded-xl p-2 text-sm focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md w-full"
+                  >
+                    <option value="">All Minutes</option>
+                    {[10, 20, 25, 28, 30, 32, 34, 40].map((m) => (
+                      <option key={m} value={m}>
+                        {m}+ Minutes
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={winLoss || ""}
+                    onChange={(e) => setWinLoss(e.target.value || null)}
+                    className="bg-gray-900 border border-gray-700 rounded-xl p-2 text-sm focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md w-full"
+                  >
+                    <option value="">All Games</option>
+                    <option value="W">Wins Only</option>
+                    <option value="L">Losses Only</option>
+                  </select>
+                  <select
+                    value={selectedTeammate || ""}
+                    onChange={(e) => setSelectedTeammate(e.target.value || null)}
+                    className="bg-gray-900 border border-gray-700 rounded-xl p-2 text-sm focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md w-full"
+                  >
+                    <option value="">Select Teammate</option>
+                    {teammates.map((teammate) => (
+                      <option key={teammate.player_id} value={teammate.player_id}>
+                        {teammate.player_name}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedTeammate && (
+                    <select
+                      value={filterTeammate || ""}
+                      onChange={(e) => setFilterTeammate(e.target.value || null)}
+                      className="bg-gray-900 border border-gray-700 rounded-xl p-2 text-sm focus:border-orange-500 focus:outline-none transition-all duration-300 hover:border-orange-500 shadow-md w-full"
+                    >
+                      <option value="">All Games</option>
+                      <option value="with">With Teammate</option>
+                      <option value="without">Without Teammate</option>
+                    </select>
+                  )}
+                </div>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {statCategories.map((stat) => (
+                    <button
+                      key={stat.key}
+                      onClick={() => setSelectedStat(stat.key)}
+                      className={`px-3 py-1 rounded-xl font-medium text-sm transition-all duration-300 ${
+                        selectedStat === stat.key
+                          ? "bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-md"
+                          : "border border-gray-700 text-gray-300 hover:border-orange-500 hover:text-orange-400"
+                      }`}
+                    >
+                      {stat.label}
+                    </button>
+                  ))}
+                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={filteredGames} margin={{ top: 15, right: 20, left: -10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
+                    <XAxis dataKey="game_date" stroke="#fff" tick={{ fontSize: 10 }} />
+                    <YAxis stroke="#fff" tick={{ fontSize: 10 }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey={selectedStat} radius={[6, 6, 0, 0]}>
+                      {filteredGames.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={
+                            entry[selectedStat] < thresholdValue
+                              ? "#FF4747"
+                              : entry[selectedStat] > thresholdValue
+                              ? "#00DF4C"
+                              : "#8C8C89"
+                          }
+                        />
+                      ))}
+                    </Bar>
+                    <ReferenceLine y={thresholdValue} stroke="#fff" strokeDasharray="5 5" />
+                  </BarChart>
+                </ResponsiveContainer>
+                <div className="text-center text-sm text-gray-400">
+                  Over {thresholdValue} {statCategories.find((stat) => stat.key === selectedStat)?.label || selectedStat}{" "}
+                  in {gamesOverThreshold} of {totalGames} games ({percentageOver}%)
+                </div>
+              </div>
+            </div>
+
+            {/* Game Logs */}
+            <div className="p-6 rounded-xl border border-gray-700 shadow-md">
+              <h2 className="text-xl font-semibold mb-4 text-orange-400 border-b border-orange-500 pb-2">
+                Game Logs
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left min-w-[600px]">
+                  <thead className="bg-gray-900/50">
+                    <tr>
+                      {[
+                        "Date",
+                        "Matchup",
+                        "W/L",
+                        "Mins",
+                        "FG",
+                        "FG%",
+                        "3PT",
+                        "3PT%",
+                        "FT",
+                        "FT%",
+                        "Reb",
+                        "Ast",
+                        "Blk",
+                        "Stl",
+                        "PF",
+                        "Pts",
+                      ].map((header) => (
+                        <th key={header} className="p-3 font-semibold">
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentRows.map((game, index) => (
+                      <tr key={index} className="border-t border-gray-700 hover:bg-gray-700/50 transition-colors">
+                        <td className="p-3">{game.game_date}</td>
+                        <td className="p-3">{game.matchup}</td>
+                        <td className="p-3">{game.outcome}</td>
+                        <td className="p-3">{game.mins_played}</td>
+                        <td className="p-3">
+                          {game.fg_made}-{game.fg_att}
+                        </td>
+                        <td className="p-3">{`${Math.round(game.fg_pct * 10000) / 100}%`}</td>
+                        <td className="p-3">
+                          {game.fg3_made}-{game.fg3_att}
+                        </td>
+                        <td className="p-3">{`${Math.round(game.fg3_pct * 10000) / 100}%`}</td>
+                        <td className="p-3">
+                          {game.ft_made}-{game.ft_att}
+                        </td>
+                        <td className="p-3">{`${Math.round(game.ft_pct * 10000) / 100}%`}</td>
+                        <td className="p-3">{game.reb}</td>
+                        <td className="p-3">{game.ast}</td>
+                        <td className="p-3">{game.blk}</td>
+                        <td className="p-3">{game.stl}</td>
+                        <td className="p-3">{game.foul}</td>
+                        <td className="p-3">{game.pts}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex justify-center gap-4 mt-6">
+                <button
+                  onClick={() => paginate(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => paginate(currentPage + 1)}
+                  disabled={indexOfLastRow >= profile.gamelogs.length}
+                  className="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex justify-center gap-3 sm:gap-4 mt-4 sm:mt-6">
-            <button
-              onClick={() => paginate(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 sm:px-4 sm:py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => paginate(currentPage + 1)}
-              disabled={indexOfLastRow >= profile.gamelogs.length}
-              className="px-3 py-1 sm:px-4 sm:py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-            >
-              Next
-            </button>
-          </div>
-        </section>
+        </div>
       </div>
     </div>
   );
