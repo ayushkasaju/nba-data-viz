@@ -388,7 +388,7 @@ def fetchGrades():
                               0.20 * normalize(combined_df["TS_PCT"]) +
                               0.10 * normalize(combined_df["EFG_PCT"]) +
                               0.20 * normalize(combined_df["PCT_UAST_FGM"])) * 100
-    combined_df["Scoring"] = rescale(combined_df["Scoring"], factor=10)
+    combined_df["Scoring"] = rescale(combined_df["Scoring"], factor=12)
 
     # Playmaking Formula: Include secondary assists for facilitators
     combined_df["Playmaking"] = (0.30 * normalize(combined_df["AST"]) +
@@ -445,11 +445,22 @@ def fetchGrades():
             "Defense": row["Defense"],
             "Athleticism": row["Athleticism"]
         }
+
+        # Calculate additional flags for specialization
+        league_medians = combined_df[["STL", "BLK", "SECONDARY_AST", "OPP_FG3_PCT"]].median()
+        is_shooter = row["PCT_PTS_3PT"] > 0.40 and row["FG3_PCT"] > 0.37  # High 3PT volume and efficiency
+        is_rim_finisher = row["DUNK_FGA"] > 4.0 or row["PCT_PTS_PAINT"] > 0.5  # Dunks or paint-heavy
+        is_perimeter_defender = row["STL"] > league_medians["STL"] * 1.5 and row["OPP_FG3_PCT"] < league_medians["OPP_FG3_PCT"] * 0.9
+        is_rim_protector = row["BLK"] > league_medians["BLK"] * 1.5
         
         # Get top two categories and their scores
         sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         top_cat, top_score = sorted_scores[0]
         second_cat, second_score = sorted_scores[1]
+        third_cat, third_score = sorted_scores[2]
+
+        # Calculate difference for balance vs. skew
+        score_diff = top_score - second_score
         
         # Check for extreme cases first
         if row['Avg_Grade'] < 40 and row['MIN'] < 15:
@@ -458,81 +469,166 @@ def fetchGrades():
         if all(45 <= score <= 55 for score in scores.values()):
             return "Role Player"  # Average, well-rounded, no standout traits
         
-        # Define archetypes based on top two categories
-        # Scoring-led archetypes
+        # Style-based archetype rules with balanced vs. skewed logic
         if top_cat == "Scoring":
             if second_cat == "Playmaking":
-                return "Scoring Maestro" if top_score >= 75 else "Shot Creator"
+                if is_shooter:
+                    return "Sharpshooting Maestro"
+                elif score_diff <= 10 and top_score >= 75:
+                    return "Dual-Threat Maestro"
+                elif score_diff > 15:
+                    return "Shot Creator"
+                return "Scoring Playmaker"
             elif second_cat == "Athleticism":
-                return "Explosive Scorer" if top_score >= 75 else "Dynamic Finisher"
+                if is_rim_finisher:
+                    return "Explosive Finisher"
+                elif score_diff <= 10 and top_score >= 75:
+                    return "Athletic Scorer"
+                elif score_diff > 15:
+                    return "Dynamic Finisher"
+                return "Scoring Athlete"
             elif second_cat == "Defense":
-                return "Two-Way Sniper" if top_score >= 75 else "Offensive Defender"
+                if is_perimeter_defender:
+                    return "Perimeter Two-Way Threat"
+                elif score_diff <= 10 and top_score >= 75:
+                    return "Two-Way Star"
+                elif score_diff > 15:
+                    return "Defensive Scorer"
+                return "Scoring Defender"
             elif second_cat == "Rebounding":
-                return "Scoring Rebounder" if top_score >= 75 else "Board-and-Score Big"
+                if is_rim_finisher:
+                    return "Scoring Interior Force"
+                elif score_diff <= 10 and top_score >= 75:
+                    return "Interior Dual-Threat"
+                elif score_diff > 15:
+                    return "Paint Powerhouse"
+                return "Scoring Rebounder"
         
-        # Playmaking-led archetypes
         elif top_cat == "Playmaking":
             if second_cat == "Scoring":
-                return "Playmaking Star" if top_score >= 75 else "Dual-Threat Guard"
+                if row["SECONDARY_AST"] > league_medians["SECONDARY_AST"] * 1.5:
+                    return "Orchestrating Star"
+                elif score_diff <= 10 and top_score >= 75:
+                    return "Playmaking Scorer"
+                elif score_diff > 15:
+                    return "Dual-Threat Guard"
+                return "Facilitating Scorer"
             elif second_cat == "Defense":
-                return "Floor General" if top_score >= 75 else "Defensive Orchestrator"
+                if is_perimeter_defender:
+                    return "Defensive Floor General"
+                elif score_diff <= 10 and top_score >= 75:
+                    return "Disruptive Playmaker"
+                elif score_diff > 15:
+                    return "Pesky Facilitator"
+                return "Defensive Distributor"
             elif second_cat == "Athleticism":
-                return "Flashy Facilitator" if top_score >= 75 else "Pace Pusher"
+                if score_diff <= 10 and top_score >= 75:
+                    return "Dynamic Facilitator"
+                elif score_diff > 15:
+                    return "Pace Pusher"
+                return "Athletic Playmaker"
             elif second_cat == "Rebounding":
-                return "Rebounding Maestro" if top_score >= 75 else "Board Facilitator"
+                if score_diff <= 10 and top_score >= 75:
+                    return "Rebounding Playmaker"
+                elif score_diff > 15:
+                    return "Rebound Distributor"
+                return "Board Passer" if third_score < 60 else "Rebounding Maestro"
         
-        # Rebounding-led archetypes
         elif top_cat == "Rebounding":
             if second_cat == "Defense":
-                return "Rim Guardian" if top_score >= 75 else "Paint Protector"
+                if is_rim_protector:
+                    return "Rim Guardian"
+                elif score_diff <= 10 and top_score >= 75:
+                    return "Defensive Rebounder"
+                elif score_diff > 15:
+                    return "Paint Protector"
+                return "Rebounding Defender"
             elif second_cat == "Scoring":
-                return "Dominant Big" if top_score >= 75 else "Post Operator"
+                if score_diff <= 10 and top_score >= 75:
+                    return "Scoring Boardmaster"
+                elif score_diff > 15:
+                    return "Post Operator"
+                return "Rebounding Scorer"
             elif second_cat == "Athleticism":
-                return "Rebounding Force" if top_score >= 75 else "Energy Big"
+                if score_diff <= 10 and top_score >= 75:
+                    return "Athletic Board-Crasher"
+                elif score_diff > 15:
+                    return "Energy Big"
+                return "Rebounding Athlete"
             elif second_cat == "Playmaking":
-                return "Outlet Specialist" if top_score >= 75 else "Transition Starter"
+                if score_diff <= 10 and top_score >= 75:
+                    return "Facilitating Rebounder"
+                elif score_diff > 15:
+                    return "Outlet Specialist"
+                return "Board Facilitator"
         
-        # Defense-led archetypes
         elif top_cat == "Defense":
             if second_cat == "Rebounding":
-                return "Defensive Anchor" if top_score >= 75 else "Interior Wall"
+                if is_rim_protector:
+                    return "Defensive Anchor"
+                elif score_diff <= 10 and top_score >= 75:
+                    return "Rebounding Stopper"
+                elif score_diff > 15:
+                    return "Interior Wall"
+                return "Defensive Rebounder"
             elif second_cat == "Athleticism":
-                return "Perimeter Hawk" if top_score >= 75 else "Active Defender"
+                if is_perimeter_defender:
+                    return "Perimeter Hawk"
+                elif score_diff <= 10 and top_score >= 75:
+                    return "Athletic Defender"
+                elif score_diff > 15:
+                    return "Active Defender"
+                return "Hustle Defender"
             elif second_cat == "Scoring":
-                return "Two-Way Wing" if top_score >= 75 else "Defensive Scorer"
+                if score_diff <= 10 and top_score >= 75:
+                    return "Two-Way Threat"
+                elif score_diff > 15:
+                    return "Defensive Scorer"
+                return "Scoring Stopper"
             elif second_cat == "Playmaking":
-                return "Disruptive General" if top_score >= 75 else "Pesky Facilitator"
+                if score_diff <= 10 and top_score >= 75:
+                    return "Playmaking Defender"
+                elif score_diff > 15:
+                    return "Pesky Facilitator"
+                return "Disruptive Distributor"
         
-        # Athleticism-led archetypes
         elif top_cat == "Athleticism":
             if second_cat == "Scoring":
-                return "Athletic Phenom" if top_score >= 75 else "Highlight Maker"
+                if is_rim_finisher:
+                    return "Athletic Phenom"
+                elif score_diff <= 10 and top_score >= 75:
+                    return "Scoring Dynamo"
+                elif score_diff > 15:
+                    return "Highlight Maker"
+                return "Athletic Scorer"
             elif second_cat == "Defense":
-                return "Energy Stopper" if top_score >= 75 else "Hustle Spark"
+                if is_perimeter_defender:
+                    return "Energy Stopper"
+                elif score_diff <= 10 and top_score >= 75:
+                    return "Defensive Athlete"
+                elif score_diff > 15:
+                    return "Hustle Spark"
+                return "Active Athlete"
             elif second_cat == "Rebounding":
-                return "Bounding Enforcer" if top_score >= 75 else "Rebound Athlete"
+                if score_diff <= 10 and top_score >= 75:
+                    return "Rebounding Dynamo"
+                elif score_diff > 15:
+                    return "Rebound Athlete"
+                return "Athletic Board-Grabber"
             elif second_cat == "Playmaking":
-                return "Dynamic Driver" if top_score >= 75 else "Fast-Break Igniter"
+                if score_diff <= 10 and top_score >= 75:
+                    return "Playmaking Athlete"
+                elif score_diff > 15:
+                    return "Fast-Break Igniter"
+                return "Dynamic Distributor"
         
-        # Fallback (shouldn’t hit this due to logic above)
-        return "Role Player"
+        return "Versatile Contributor"
 
     combined_df["Archetype"] = combined_df.apply(assign_archetype, axis=1)
 
     # Save to database
     combined_df.to_sql(name=table, con=db, if_exists='replace', index=False)
     print("Grades and archetypes updated")
-
-scheduler = BackgroundScheduler()
-
-@scheduler.scheduled_job('cron', hour=2, timezone='US/Central')
-def runPrograms():
-    fetchPlayers()
-    fetchStandings()
-    fetchGamelogs()
-    fetchGrades()
-
-scheduler.start()
 
 @app.route('/games')
 def games():
