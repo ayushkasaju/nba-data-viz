@@ -123,7 +123,10 @@ const NBA = () => {
       hour12: true,
     });
   };
-  const getTeamScores = (game) => `${game[5] ?? ""} - ${game[8] ?? ""}`;
+  const getTeamScores = (game) => {
+    // Show scores only if game has started (status > 1)
+    return getGameStatus(game) > 1 ? `${game[5] ?? ""} - ${game[8] ?? ""}` : "";
+  };
   const isGameLive = (game) => getGameStatus(game) === 2;
 
   return (
@@ -180,6 +183,12 @@ const NBA = () => {
                     </span>
                   </div>
                 </div>
+                {/* Display scores if game has started */}
+                {getTeamScores(game) && (
+                  <div className="text-center text-lg font-semibold text-white mb-4">
+                    {getTeamScores(game)}
+                  </div>
+                )}
                 <button
                   onClick={() => handlePlayers(game[0])}
                   className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold rounded-xl 
@@ -287,7 +296,7 @@ const NBA = () => {
                   return (
                     <div
                       key={player.id}
-                      className="relative bg-gradient-to-br from-gray-800 to-black p-5 rounded-xl border border-gray-700 hover:border-orange-500 transition-all duration-300 shadow-md"
+                      WclassName="relative bg-gradient-to-br from-gray-800 to-black p-5 rounded-xl border border-gray-700 hover:border-orange-500 transition-all duration-300 shadow-md"
                     >
                       <div className="absolute -top-3 -left-3 w-6 h-6 bg-orange-500 rounded-full" />
                       <div className="flex items-center gap-3 mb-4">
