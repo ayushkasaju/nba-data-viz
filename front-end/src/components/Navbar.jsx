@@ -37,8 +37,22 @@ const Navbar = () => {
   const fetchSearchResults = async () => {
     try {
       const [playersResponse, teamsResponse] = await Promise.all([
-        fetch(`${process.env.REACT_APP_API_URL}/players`),
-        fetch(`${process.env.REACT_APP_API_URL}/teams`)
+        fetch(`${process.env.REACT_APP_API_URL}/players`, {
+            method: "GET",
+            redirect: "follow",
+            headers: {
+              "Accept": "application/json",
+              "ngrok-skip-browser-warning": "true",
+            },
+          }),
+        fetch(`${process.env.REACT_APP_API_URL}/teams`, {
+            method: "GET",
+            redirect: "follow",
+            headers: {
+              "Accept": "application/json",
+              "ngrok-skip-browser-warning": "true",
+            },
+          })
       ]);
       
       const playersData = await playersResponse.json();
