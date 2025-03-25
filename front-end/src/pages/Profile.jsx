@@ -718,7 +718,7 @@ const Profile = () => {
                     {
                       label: "Draft",
                       value: profile.player_info[0]?.DRAFT_YEAR !== 0
-                        ? `${profile.player_info[0]?.DRAFT_YEAR} R${profile.player_info[0]?.DRAFT_ROUND}`
+                        ? `${profile.player_info[0]?.DRAFT_YEAR} R${profile.player_info[0]?.DRAFT_ROUND} P${profile.player_info[0]?.DRAFT_NUMBER}`
                         : "Undrafted",
                     },
                     { label: "Archetype", value: profile.player_grades[0]?.Archetype || "N/A" },
