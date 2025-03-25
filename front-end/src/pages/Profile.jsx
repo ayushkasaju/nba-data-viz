@@ -311,6 +311,7 @@ const Profile = () => {
                 {[
                   { label: "Height", value: profile.player_info[0]?.HEIGHT || "N/A" },
                   { label: "Weight", value: profile.player_info[0]?.WEIGHT || "N/A" },
+                  { label: "College", value: profile.player_info[0]?.COLLEGE || "N/A" },
                   {
                     label: "Draft",
                     value:

@@ -232,7 +232,7 @@ def fetchGrades():
         # Fetch and clean base stats
         player_base = leaguedashplayerstats.LeagueDashPlayerStats(measure_type_detailed_defense='Base', per_mode_detailed='PerGame', timeout=60)
         player_base_df = player_base.get_data_frames()[0]
-        player_base_df = player_base_df.drop(columns=['AGE', 'W', 'L', 'W_PCT', 'FGM', 'FG_PCT', 'FG3A', 'FG3M', 'FG3_PCT', 'FTM', 'FT_PCT', 'BLKA', 'PFD', "PLUS_MINUS", "NBA_FANTASY_PTS", "DD2", "TD3", "WNBA_FANTASY_PTS", "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK", "FGM_RANK", "FGA_RANK", "FG_PCT_RANK", "FG3M_RANK", "FG3A_RANK", "FG3_PCT_RANK", "FTM_RANK", "FTA_RANK", "FT_PCT_RANK", "OREB_RANK", "DREB_RANK", "REB_RANK", "AST_RANK", "TOV_RANK", "STL_RANK", "BLK_RANK", "BLKA_RANK", "PF_RANK", "PFD_RANK", "PTS_RANK", "PLUS_MINUS_RANK", "NBA_FANTASY_PTS_RANK", "DD2_RANK", "TD3_RANK", "WNBA_FANTASY_PTS_RANK"], axis=1)
+        player_base_df = player_base_df.drop(columns=['AGE', 'W', 'L', 'W_PCT', 'FGM', 'FG_PCT', 'FG3A', 'FG3M', 'FTM', 'FT_PCT', 'BLKA', 'PFD', "PLUS_MINUS", "NBA_FANTASY_PTS", "DD2", "TD3", "WNBA_FANTASY_PTS", "GP_RANK", "W_RANK", "L_RANK", "W_PCT_RANK", "MIN_RANK", "FGM_RANK", "FGA_RANK", "FG_PCT_RANK", "FG3M_RANK", "FG3A_RANK", "FG3_PCT_RANK", "FTM_RANK", "FTA_RANK", "FT_PCT_RANK", "OREB_RANK", "DREB_RANK", "REB_RANK", "AST_RANK", "TOV_RANK", "STL_RANK", "BLK_RANK", "BLKA_RANK", "PF_RANK", "PFD_RANK", "PTS_RANK", "PLUS_MINUS_RANK", "NBA_FANTASY_PTS_RANK", "DD2_RANK", "TD3_RANK", "WNBA_FANTASY_PTS_RANK"], axis=1)
 
         # Fetch and clean advanced stats
         player_adv = leaguedashplayerstats.LeagueDashPlayerStats(measure_type_detailed_defense='Advanced', per_mode_detailed='PerGame', timeout=60)
