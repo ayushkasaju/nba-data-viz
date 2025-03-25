@@ -727,7 +727,7 @@ def teams():
     teams_dict = {}
     for index, row in merged_db.iterrows():
         team_id, team_name , city, arena, owner, generalmanager, headcoach, conference, record, playoffrank = row
-        teams_dict[team_id] = {'team_name': team_name, 'city': city, 'arena': arena, 'owner': owner, 'general_manager': generalmanager, 'head_coach': headcoach, 'conference': conference, 'record': record, 'playoff_rank': playoffrank}
+        teams_dict[team_id] = {'team_id': team_id, 'team_name': team_name, 'city': city, 'arena': arena, 'owner': owner, 'general_manager': generalmanager, 'head_coach': headcoach, 'conference': conference, 'record': record, 'playoff_rank': playoffrank}
     return jsonify(teams_dict)
     
 @app.route('/games/<gameId>')
