@@ -276,7 +276,7 @@ const Profile = () => {
   const percentageOver = totalGames > 0 ? ((gamesOverThreshold / totalGames) * 100).toFixed(1) : 0;
 
   const handleTeamClick = (teamId) => navigate(`/team/${teamId}`);
-  const handleTeammateClick = (teammateId) => navigate(`/player/${teammateId}`);
+  const handleTeammateClick = (teammateId) => navigate(`/nba/player/${teammateId}`);
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden font-sans">
