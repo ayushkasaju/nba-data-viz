@@ -3,7 +3,7 @@ import Typed from "react-typed";
 import { Link } from "react-router-dom";
 
 const Home = () => {
-  const [typedStrings, setTypedStrings] = useState(["Loading..."]);
+  const [typedStrings, setTypedStrings] = useState([""]);
   const [leagueLeaders, setLeagueLeaders] = useState({
     points: [],
     rebounds: [],
