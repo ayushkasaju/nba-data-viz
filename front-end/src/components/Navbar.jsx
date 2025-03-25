@@ -76,7 +76,6 @@ const Navbar = () => {
             team.team_name.toLowerCase().includes(searchQuery.toLowerCase())
         )
         .map(team => {
-            console.log("Team:", team);
             return {
             ...team,
             logo: importLogo(team.team_id)
