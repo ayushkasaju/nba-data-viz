@@ -168,7 +168,7 @@ const Navbar = () => {
                   <img
                     src={player.headshot}
                     alt={player.player_name}
-                    className="w-8 h-8 rounded-full object-cover mr-3"
+                    className="w-11 h-8 rounded-full object-cover mr-3"
                   />
                   <span className="text-white">{player.player_name} - {player.team}</span>
                 </Link>
@@ -183,7 +183,7 @@ const Navbar = () => {
                   <img
                     src={team.logo}
                     alt={team.team_name}
-                    className="w-8 h-8 rounded-full object-cover mr-3"  
+                    className="w-11 h-8 rounded-full object-cover mr-3"  
                   />
                   <span className="text-white">{team.team_name}</span>
                 </Link>
@@ -243,7 +243,7 @@ const Navbar = () => {
                     <img
                       src={player.headshot}
                       alt={player.player_name}
-                      className="w-8 h-8 rounded-full mr-2"
+                      className="w-11 h-8 rounded-full mr-2"
                     />
                     <span className="text-white text-sm">{player.player_name} - {player.team}</span>
                   </Link>
@@ -261,7 +261,7 @@ const Navbar = () => {
                     <img
                       src={team.logo}
                       alt={team.team_name}
-                      className="w-8 h-8 mr-2"
+                      className="w-11 h-8 mr-2"
                     />
                     <span className="text-white text-sm">{team.team_name}</span>
                   </Link>
