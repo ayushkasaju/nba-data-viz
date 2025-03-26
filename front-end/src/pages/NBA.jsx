@@ -185,7 +185,7 @@ const NBA = () => {
                 </div>
                 {/* Display scores if game has started */}
                 {getTeamScores(game) && (
-                  <div className="text-center text-lg font-semibold text-white mb-4">
+                  <div className="text-center text-3xl font-semibold text-white mb-4">
                     {getTeamScores(game)}
                   </div>
                 )}
